@@ -12,7 +12,7 @@
  * independently.
  */
 window.__ModuleLoader__.load({
-  id: '@local/dsh-usage-balance-v20',
+  id: 'dsh-usage-balance-card',
   factory(require) {
     const React = require('react')
     const h = React.createElement
@@ -22,9 +22,9 @@ window.__ModuleLoader__.load({
     const BALANCE_KEY = 'dsh-usage-balance:balance'
     const CARD_STATE_KEY = 'dsh-usage-balance:card-state:v1'
     const CARD_STATE_MAX = 80
-    const LOCAL_CONFIG_KEY = 'dsh-usage-balance:features-v20'
-    const BUNDLE_NAME = '@local/dsh-usage-balance-v20'
-    const ROW_ID = 'usage-balance-v20'
+    const LOCAL_CONFIG_KEY = 'dsh-usage-balance:features'
+    const BUNDLE_NAME = 'dsh-usage-balance-card'
+    const ROW_ID = 'usage-balance-card'
     const EMPTY_TURNS = []
     const CONFIG_ENTRY_IDS = [BUNDLE_NAME, ROW_ID, `include:${ROW_ID}`]
     const COLLECT_CONCURRENCY = 3

@@ -1,9 +1,30 @@
 {
-  "name": "@local/dsh-usage-balance-v20",
-  "version": "0.20.0",
-  "private": true,
+  "name": "dsh-usage-balance-card",
+  "version": "1.0.0",
   "type": "module",
-  "description": "Side balance card with previous/current-turn spend, running and interrupted states, and a per-turn usage ledger.",
+  "description": "DeepSeek Harness side balance card with previous/current-turn spend, running and interrupted states, cache/context indicators, and a per-turn usage ledger.",
+  "license": "MIT",
+  "author": "H-ATK",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/H-ATK/dsh-usage.git"
+  },
+  "homepage": "https://github.com/H-ATK/dsh-usage#readme",
+  "bugs": {
+    "url": "https://github.com/H-ATK/dsh-usage/issues"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "deepseek",
+    "usage",
+    "balance",
+    "token",
+    "cost"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
@@ -17,7 +38,9 @@
     "locale/*.json",
     "icon.svg",
     "README.md",
-    "INSTALL.md"
+    "INSTALL.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "dsh": {
     "bundle": {

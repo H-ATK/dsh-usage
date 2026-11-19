@@ -4,6 +4,20 @@
 >
 > This plugin adds no token charges. It reads local Session projections and the account balance only; it makes no model requests and appends no chat messages.
 
+## 安装 / Install
+
+```powershell
+# npm（发布后）
+dsh plugin --profile desktop add dsh-usage-balance-card
+
+# 直接从 GitHub 安装
+dsh plugin --profile desktop add github:H-ATK/dsh-usage
+```
+
+也可以下载仓库 ZIP，解压后在 **插件 → 添加插件** 中选择包含 `package.json` 的文件夹。安装后重启 DSH，打开 **插件 → 已安装 → 用量余额卡片**。
+
+> npm 包名为 `dsh-usage-balance-card`；发布前请使用上面的 GitHub 安装方式。
+
 ---
 
 ## 中文
@@ -135,3 +149,9 @@ With Balance card off: **Show other information on keeps the built-in composer s
 - The projection keeps at most the most recent 500 turns per Session.
 - Cost is estimated from DeepSeek's official peak/off-peak prices; the platform bill is authoritative. Chinese statutory holidays are not special-cased.
 - **Turn token usage** is a separate plugin. Disabling it does not affect this plugin.
+
+<img width="1201" height="840" alt="ca345da42e89c4de862459ac74a772e8" src="https://github.com/user-attachments/assets/ac516b31-1d8b-4086-9119-568c062412b2" />
+
+<img width="1330" height="840" alt="621fd097fb47299f2be8cf9df60b3393" src="https://github.com/user-attachments/assets/4ec0917b-7c0f-4d8b-8279-0590defce22a" />
+
+<img width="1330" height="840" alt="e537a3f540b76d569d4420216a424f5d" src="https://github.com/user-attachments/assets/c3e464c5-26a7-40e3-9a38-991064e23777" />
