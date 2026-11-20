@@ -1,0 +1,73 @@
+{
+  "version": "2026-11-20.1",
+  "updatedAt": "2026-11-20T12:00:00+08:00",
+  "source": "builtin",
+  "models": [
+    {
+      "provider": "openai",
+      "model": "gpt-4o",
+      "name": "OpenAI GPT-4o",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 2.5,
+      "cached": 1.25,
+      "cacheWrite": 2.5,
+      "output": 10
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "name": "OpenAI GPT-4o mini",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 0.15,
+      "cached": 0.075,
+      "cacheWrite": 0.15,
+      "output": 0.6
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-3.5-sonnet",
+      "name": "Anthropic Claude 3.5 Sonnet",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 3,
+      "cached": 0.3,
+      "cacheWrite": 3.75,
+      "output": 15
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-3.5-haiku",
+      "name": "Anthropic Claude 3.5 Haiku",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 0.8,
+      "cached": 0.08,
+      "cacheWrite": 1,
+      "output": 4
+    },
+    {
+      "provider": "google",
+      "model": "gemini-1.5-pro",
+      "name": "Google Gemini 1.5 Pro",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 1.25,
+      "cached": 0.31,
+      "cacheWrite": 1.25,
+      "output": 5
+    },
+    {
+      "provider": "google",
+      "model": "gemini-1.5-flash",
+      "name": "Google Gemini 1.5 Flash",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 0.075,
+      "cached": 0.018,
+      "cacheWrite": 0.075,
+      "output": 0.3
+    }
+  ]
+}
