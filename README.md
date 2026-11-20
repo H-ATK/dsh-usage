@@ -161,3 +161,7 @@ Open **Plugins → Installed → Usage balance card** and use the switches at th
 ## License
 
 MIT
+
+
+<img width="1329" height="840" alt="47cc4f405c81c8f10bf297e576148a41" src="https://github.com/user-attachments/assets/8ee55beb-0794-4ed3-9055-7f7c89671a79" />
+
