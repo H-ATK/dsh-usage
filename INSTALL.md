@@ -24,21 +24,22 @@ dsh plugin --profile desktop add dsh-usage-balance-card
 2. 打开 DSH 的 **插件 → 添加插件**，选择包含 `package.json` 的目录。
 3. 重启 DSH（如果提示需要重启）。
 4. 打开 **插件 → 已安装 → 用量余额卡片**。
-5. 首次启用时三个开关默认全部开启：
+5. 首次启用时两个开关默认全部开启：
    - 余额卡片
    - 使用量轨迹
-   - 显示其他信息
-6. 打开任意对话窗口即可看到卡片。之后每次切换都会记录，DSH 重启后按上次状态恢复。
+6. 打开任意对话窗口即可看到余额卡片和使用量轨迹页签。
 
-### 开关行为
+### 功能开关
 
-- 首次启用：三个开关全部开启。
+- 首次启用：两个开关全部开启。
 - 之后每次切换立即写入 `localStorage`；DSH 关闭再启动会恢复记录的状态。
-- 余额卡片开 + 显示其他信息开：统计信息在卡片里，原生统计行隐藏。
-- 余额卡片开 + 显示其他信息关：卡片只保留余额、上一轮、本轮消费，原生统计行显示。
-- 余额卡片关 + 显示其他信息开：原生统计行显示。
-- 余额卡片关 + 显示其他信息关：原生统计行完全消失，包括行高。
-- 卡片因窗口过窄隐藏时，原生统计行保留。
+- 余额卡片开：输入框左侧显示余额、上一轮/本轮消费、当前时段状态与价格；输入框底部的官方统计行始终显示。
+- 余额卡片关：布局恢复，官方统计行保持显示。
+- 使用量轨迹开：顶部显示页签，首次开启或重新开启时全量收集所有会话；每轮结束更新当前窗口和工作区统计。
+- 使用量轨迹关：页签移除，不影响余额卡片。
+- 价格表的“当前”跟随 `modelSelection` 投影；切到本地模型时，会在价格图例下方显示本地模型名和“当前”。
+- 本地模型不计入总 Token、总消费或平均缓存命中率，也不产生余额消费；轮次明细仍显示该行 Token，并标“本地 / 不计费”。
+- 卡片因窗口过窄隐藏时，官方统计行保持显示。
 
 ### 兼容性
 
@@ -72,21 +73,22 @@ dsh plugin --profile desktop add dsh-usage-balance-card
 2. Open **Plugins → Add plugin** and choose the folder containing `package.json`.
 3. Restart DSH if prompted.
 4. Open **Plugins → Installed → Usage balance card**.
-5. On first enable all three switches default to on:
+5. On first enable both switches default to on:
    - Balance card
    - Usage trajectory
-   - Show other information
-6. Open any conversation to see the card. Every later toggle is recorded and restored after a DSH restart.
+6. Open any conversation to see the balance card and Usage trajectory tab.
 
-### Switch behavior
+### Feature switches
 
-- First enable: all three switches on.
+- First enable: both switches on.
 - Every later change is written to `localStorage`; a DSH restart restores the recorded state.
-- Balance card on + Show other information on: statistics live in the card, native row hidden.
-- Balance card on + Show other information off: the card keeps only balance and previous/current-turn spend, and the native row stays visible.
-- Balance card off + Show other information on: native row visible.
-- Balance card off + Show other information off: native row disappears completely, including its height.
-- When the card hides because the window is narrow, the native row stays visible.
+- Balance card on: balance, previous/current-turn spend, and current window state/price sit left of the composer; the official composer statistics row always stays visible.
+- Balance card off: the composer layout returns; the official statistics row stays visible.
+- Usage trajectory on: show the tab; first enable or re-enable runs a full collection across all Sessions; every completed turn refreshes the current-window and workspace totals.
+- Usage trajectory off: remove the tab; the balance card is unaffected.
+- The price table’s “Current” badge follows the `modelSelection` projection; a selected local model appears below the legend with its name and “Current”.
+- Local models add no aggregate tokens, cost, average cache hit rate, or wallet spend; turn rows still show their tokens and mark Local / free.
+- When the card hides because the window is narrow, the official statistics row stays visible.
 
 ### Compatibility
 

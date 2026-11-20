@@ -7,16 +7,32 @@
 ## 安装 / Install
 
 ```powershell
-# npm（发布后）
-dsh plugin --profile desktop add dsh-usage-balance-card
-
 # 直接从 GitHub 安装
 dsh plugin --profile desktop add github:H-ATK/dsh-usage
 ```
 
-也可以下载仓库 ZIP，解压后在 **插件 → 添加插件** 中选择包含 `package.json` 的文件夹。安装后重启 DSH，打开 **插件 → 已安装 → 用量余额卡片**。
+也可以下载仓库 ZIP，解压后在 **插件 → 添加插件** 中选择包含 `package.json` 的文件夹。
 
-> npm 包名为 `dsh-usage-balance-card`；发布前请使用上面的 GitHub 安装方式。
+安装后重启 DSH，打开 **插件 → 已安装 → 用量余额卡片**。插件提供两个可独立开关的功能：
+
+- **余额卡片**：对话输入框左侧的余额与本轮消费卡片。
+- **使用量轨迹**：会话顶部“轨迹”右侧的按轮次用量账本。
+
+> npm 包名为 `dsh-usage-balance-card`。
+
+## 最新版本 1.9.0 / What's new
+
+- **余额卡片**：显示 DeepSeek 账户余额、上一轮消费、本轮消费和当前峰谷价格；本轮进行中显示进行中状态，结束后显示金额。
+- **使用量轨迹**：新增工作区/当前窗口的“付费模型”总览，以及按 provider/model 拆分的本地模型和其他付费 API 统计。
+- **本地模型**：单独统计 Token 与轮次，不计入付费总览、不扣 DeepSeek 余额，轮次明细保留本地用量。
+- **第三方付费 API**：Token 计入工作区/当前窗口总览，同时单独列出各厂商/模型的使用量和参考费用；无峰谷的厂商显示黄色“统一价”。
+- **价格与单位**：模型拆分和官方价格表字号放大；中文用户使用“万/亿”和“每 百万 Token”，不再显示纯数字加 Token。
+- **自动汇总**：首次启用、重新开启任一功能或插件重载时，自动汇总所有会话的完整轮次。
+
+## 版本历史 / Version history
+
+- **1.9.0**：当前版本，包含本地/第三方模型拆分、参考价规则、付费模型总览和界面优化。
+- **1.0.0**：首个公开版本，提供余额卡片、使用量轨迹、峰谷价格与轮次统计。
 
 ---
 
@@ -26,63 +42,71 @@ dsh plugin --profile desktop add github:H-ATK/dsh-usage
 
 **1. 对话框左侧的余额卡片**
 
-- 卡片位于对话窗口内、输入框左侧；输入框向右让出空间，卡片左边距与输入框右边距一致。
-- 卡片高度与输入框完全一致，并通过 `ResizeObserver` 跟随输入框实时变高/变矮；输入框被拉高到约两行内容的高度。
-- 内容始终垂直居中，输入框变高时上下增加留白，而不是让内容从顶部往下跑。
-- 卡片背景、边框、圆角、阴影使用与输入框相同的主题 token，自动适配深色/浅色模式。
-- 只有余额数字按余额变色：`< ¥10` 深红，`< ¥50` 橙色，`≥ ¥50` 蓝色；余额数字和其它信息统一 14px，其中“上下文”三个字为 13px。
-- 余额在卡片开启、切换对话窗口、每轮对话结束以及每 60 秒兜底刷新。
-- 余额、上一轮和本轮消费显示在同一行；余额在左，上一轮在本轮左边，两者靠右。
-- 输入框的模型/权限/发送等功能行固定在输入框底部，输入区变高时不会跟着上移。
-- 同时显示**上一轮消费**和**本轮消费**；本轮还在进行时显示带小动画的“进行中”，结束后再显示金额。
-- 上一轮和本轮金额使用浅红色；进行中的状态点和文字为黄色；余额大于 ¥50 时数字为蓝色。
-- 上下文进度环低于 60% 为蓝色，达到 60% 为橙色，达到 90% 为红色。
-- 关闭“显示其他信息”后，卡片只保留余额、上一轮和本轮消费：余额单独一行，上一轮在左、本轮在右，标签和金额/状态各占两行；此时卡片宽度和高度缩到 80%，**输入框高度也跟着缩到约 86px**。开启全部信息时输入框恢复完整高度。
-- 余额卡片开启但「显示其他信息」关闭时，输入框下方的原生统计行仍然显示。
-- 余额卡片关闭且「显示其他信息」关闭时，原生统计行完全消失，行高也一并取消。
-- 一轮对话被突然终止且还没有产生消费时，本轮状态显示红色的“被中断”。
-- 新窗口没有任何对话时只显示余额；第一轮不显示上一轮消费；第一轮进行中先显示“进行中”，结束后再显示统计、缓存和上下文。
-- 当前窗口的轮次、步骤、输出速度、总 Token、缓存命中率和上下文用量都显示在卡片内。
-- 输入框底部原有的统计行会隐藏，但保留原 22px 行高，所以输入框底部边距不会下移。
-- 消费、状态和统计会写入 `localStorage`，重启 DSH 后先恢复上次内容，再由持久会话投影校准。
-- Token 数量对中文用户使用 `万 / 亿 / 万亿 / 兆`，对英文用户使用 `K / M / B / T`。
+- 位于对话窗口内、输入框左侧；卡片高度与输入框一致，并跟随输入框变化。
+- 余额单独一行；上一轮消费在左、本轮消费靠右。
+- 本轮进行中显示进行中状态，结束后显示金额；被中断的轮次显示红色中断状态。
+- 余额下方实时显示当前时段：高峰为红色、空闲为蓝绿色，右侧显示输入/输出价格，金额后带 Token 单位。
+- 输入框底部的官方统计行保持显示；卡片不再重复显示轮次、步骤、速度、Token、缓存或上下文。
+- 余额在卡片开启、切换会话、每轮结束以及每 60 秒兜底刷新。
 
-**2. 使用量轨迹页签**
+**2. 使用量轨迹**
 
-- 位于会话顶部“轨迹”右侧，注册为 Conversation View。
-- 使用 Host 端 `usageTrack` 会话投影，覆盖完整持久日志，不只读取当前聊天窗口。
-- 每轮显示：轮次、模型（如 `DeepSeek V4.1 Flash`）、开始时间、用时、总 Token、估算消耗、高峰/空闲、缓存命中率、命中/未命中 Token。
-- 命中缓存为蓝色 8px 进度条，未命中为红色 8px 进度条；百分比按本轮总 Token 计算。
-- 表格顶部标题栏使用不透明背景并吸顶，滚动时不会让轮次内容从标题栏缝隙里透出来。
+- 位于会话顶部“轨迹”右侧，按轮次记录当前会话的 Token、缓存、费用、耗时和时段。
+- 顶部显示两张统计卡：
+  - **工作区 · 付费模型**：当前工作区所有会话的 DeepSeek 官方 + 第三方付费 API 总量。
+  - **当前窗口 · 付费模型**：当前会话的总轮次、Token、费用和平均缓存命中率。
+- 本地模型不计入“付费模型”总览；第三方付费 API 的 Token 计入总览，同时单独列出自家的用量和费用。
+- 价格表展示 Flash 和 Pro 的官方缓存/输入/输出价格，中文单位为“每 百万 Token”；价格表与轮次表头一起吸顶。
+- 每轮显示：轮次、模型、开始时间、用时、总 Token、估算消费、时段、状态、缓存命中率以及命中/未命中 Token。
+
+**3. 本地模型和其他付费 API**
+
+- `ollama`、`lmstudio`、`llama.cpp`、`vllm`、`local` 等本地 provider，或空 provider 且模型名以 Qwen/Llama/Mistral 等开头时，按本地模型处理。
+- 本地模型：不计入付费总览、不计价、不扣 DeepSeek 余额；轮次明细仍保留实际 Token。
+- 其他非 DeepSeek provider（OpenAI、Anthropic、Google、OpenRouter 等）按第三方付费 API 处理：Token 计入总览，费用在其数据包含 cost 时计入，否则显示 `--`。
+- 模型用量拆分只在存在本地模型或第三方 API 用量时显示；每个模型一行，同时显示当前窗口和工作区。
+- 没有使用本地/第三方模型时，不显示模型拆分和对应统计规则。
+
+**4. 第三方 API 参考价**
+
+页面会在第三方模型行下显示参考价，单位统一为“每 百万 Token”：
+
+| 厂商/模型 | 输入 | 缓存读 | 缓存写 | 输出 | 峰谷 |
+|---|---:|---:|---:|---:|---|
+| OpenAI GPT-4o | $2.50 | $1.25 | — | $10.00 | 统一价 |
+| OpenAI GPT-4o mini | $0.15 | $0.075 | — | $0.60 | 统一价 |
+| Anthropic Claude 3.5 Sonnet | $3.00 | $0.30 | $3.75 | $15.00 | 统一价 |
+| Anthropic Claude 3.5 Haiku | $0.80 | $0.08 | $1.00 | $4.00 | 统一价 |
+| Google Gemini 1.5 Pro | $1.25 | $0.31 | — | $5.00 | 统一价 |
+| Google Gemini 1.5 Flash | $0.075 | $0.018 | — | $0.30 | 统一价 |
+
+- 上述厂商没有 DeepSeek 式高峰/空闲双价，因此第三方轮次的“时段”显示黄色“统一价”。
+- 参考价仅用于展示和辅助核算，实际以厂商账单为准；币种为 USD，不混入 DeepSeek 钱包余额。
+- 厂商没有统一的实时价格接口，目录带有更新日期；官方改价时需要更新参考目录。
 
 ### 功能开关
 
 打开 **插件 → 已安装 → 用量余额卡片**，页面底部有“功能开关”：
 
-- **余额卡片**：显示/隐藏左侧卡片、输入框布局让位和底部统计行替换。
+- **余额卡片**：显示/隐藏左侧卡片。
 - **使用量轨迹**：显示/隐藏页签及其后台收集。
-- **显示其他信息**：开启时显示轮次、步骤、Token、缓存命中率和上下文；关闭时只显示余额、上一轮和本轮消费。
 
-三个开关相互独立。开关状态保存在 `localStorage`，并同步到 Host Config（如果该配置表单可用）。重新开启余额卡片或使用量轨迹都会重新收集各会话的最后一轮投影数据。
-
-插件首次启用时三个开关默认全部开启；之后每次切换都会立即记录，DSH 关闭再启动后按记录的状态恢复。
-
-余额卡片关闭时：**显示其他信息开启会保留输入框下方的原生统计行；关闭则原生统计行完全消失。** 卡片因窗口过窄而隐藏时也会保留原生统计行。
+两个开关相互独立，状态保存在 `localStorage`，并同步到 Host Config。首次启用或重新开启任一功能时，会全量汇总所有会话；之后新会话会自动加入统计。
 
 ### 数据与隐私
 
-- 新增一个 Host 端 `usageTrack` 会话投影，仅折叠本地会话日志中的 Token 和耗时事件。
-- 启用功能后，浏览器会向 Session Controller 请求当前列表里每个会话的投影，并在本地缓存；不会修改会话记录。
+- 新增 Host 端 `usageTrack` 会话投影，仅折叠本地会话日志中的 Token 和耗时事件。
+- 浏览器只向 Session Controller 请求投影，不修改会话记录。
 - 卡片读取现有 DeepSeek 账户余额 RPC；余额数值和查询频率与原账户页面一致。
-- 插件不发送任何会话内容到第三方，也不发起模型请求。
+- 插件不发送会话内容到第三方，也不发起模型请求。
 
 ### 兼容性与限制
 
 - 需要登录 DeepSeek 账户才能显示余额；未登录或余额不可用时显示 `--`。
-- 余额卡片在对话窗口过窄时会自动隐藏，避免把输入框压得过窄；阈值随窗口宽度自适应。
+- 余额卡片在窗口过窄时会自动隐藏，避免压缩输入框。
 - 投影每个会话最多保留最近 500 轮。
 - 费用按 DeepSeek 官方峰谷价估算，实际以平台账单为准；中国法定节假日未单独处理。
-- “本轮 Token 用量 / Turn token usage”是另一个独立插件；关闭它不会影响本插件。
+- 第三方 API 的余额和最终账单以对应厂商后台为准，插件无法读取。
 
 ---
 
@@ -90,68 +114,50 @@ dsh plugin --profile desktop add github:H-ATK/dsh-usage
 
 ### Features
 
-**1. Side balance card left of the composer**
+**Balance card**
 
-- The card sits inside the conversation window, left of the input card. The input card shifts right so the card's left margin and the input card's right margin match.
-- Its height equals the input card exactly and follows every draft resize through a `ResizeObserver`; the input is raised to about two lines of content.
-- Content stays vertically centered: growth adds space above and below instead of pushing the content down.
-- Background, border, radius, and shadow use the same theme tokens as the input card, so it follows light and dark themes.
-- Only the balance number changes color: deep red below `¥10`, orange below `¥50`, blue at `¥50` or above. The balance number and other information are 14px; the word “Context” is 13px.
-- The balance refreshes when the card mounts, when the Session switches, after each completed turn, and every 60 seconds as a safety net.
-- Balance, previous-turn spend, and current-turn spend share one row. Balance sits on the left; previous sits left of current; both costs are right-aligned.
-- The model/permission/send controls stay pinned to the bottom of the input card while the input area grows.
-- The card shows both **previous-turn spend** and **current-turn spend**. A running turn shows an animated Running state; the amount appears after the turn ends.
-- Previous and current amounts are light red; the running dot and label are yellow; a balance above ¥50 is blue.
-- The context ring is blue below 60%, orange at 60%, and red at 90%.
-- With **Show other information** off, the card keeps only balance, previous-turn spend, and current-turn spend: balance on its own row, previous on the left, current on the right, each label and amount/status on separate lines; in this mode its width and height shrink to 80%, and the **input height also drops to about 86px**. Turning the other information back on restores the full input height.
-- With the balance card on but **Show other information** off, the built-in composer statistics row stays visible.
-- With the balance card off and **Show other information** off, the built-in statistics row disappears completely, including its reserved row height.
-- A turn that is suddenly interrupted before producing spend shows a red Interrupted state.
-- A new Session with no turns shows only the balance. The first turn hides previous-turn spend; while it runs it shows Running, then reveals statistics, cache, and context after it ends.
-- The current window's turns, steps, output speed, total tokens, cache hit rate, and context usage live in the card.
-- The composer's own statistics row is hidden while the card is enabled, but its reserved 22px row height is kept, so the composer's bottom margin does not move.
-- Spend, status, and stats are written to `localStorage`; after a DSH restart the card restores them first, then reconciles with the durable Session projection.
-- Token totals use `万 / 亿 / 万亿 / 兆` for Chinese users and `K / M / B / T` for English users.
+- Sits left of the composer; height follows the composer.
+- Shows the DeepSeek balance, previous-turn spend, current-turn spend, and the active peak/off-peak price.
+- The native composer statistics row stays visible; the card does not duplicate turns, steps, speed, tokens, cache, or context.
+- Refreshes when the card opens, on Session switch, after each turn, and every 60 seconds as a fallback.
 
-**2. Usage trajectory tab**
+**Usage trajectory**
 
-- Registered as a Conversation View immediately after the built-in `Trajectory` tab.
-- Backed by the Host `usageTrack` Session projection, covering the complete durable log rather than only the loaded chat window.
-- Each turn shows: turn, model (for example `DeepSeek V4.1 Flash`), start time, duration, total tokens, estimated cost, peak/off-peak, cache hit rate, and cache-hit/cache-miss tokens.
-- Cache hits use a blue 8px bar; misses use a red 8px bar. Percentages are shares of that turn's total tokens.
-- The table header uses an opaque sticky background, so scrolling rows cannot leak through the header seam.
+- Registered next to the built-in Trajectory tab and backed by the Host `usageTrack` projection.
+- **Workspace · paid models** totals DeepSeek official + third-party paid API usage; **Current window · paid models** shows the active Session.
+- Local models are excluded from paid totals. Third-party tokens are included and also listed by provider/model; their cost is included only when available, otherwise `--`.
+- Both Flash and Pro official prices are shown with cache/input/output columns and the “per 1M tokens” legend. The price table and turn header stay sticky.
+- Each turn shows model, start time, duration, total tokens, estimated cost, window, status, and cache-hit/cache-miss details.
+
+**Local and third-party models**
+
+- Providers such as `ollama`, `lmstudio`, `llama.cpp`, `vllm`, and `local` are treated as local; they add no paid spend and no wallet charge.
+- Other non-DeepSeek providers are treated as third-party paid APIs. Their tokens count toward paid totals; their cost is used when present.
+- The model usage split appears only when local or third-party usage exists, with current-window and workspace columns.
+
+**Third-party reference prices**
+
+The model rows show a reference price per 1M tokens. The current catalog covers OpenAI GPT-4o/mini, Anthropic Claude 3.5 Sonnet/Haiku, and Google Gemini 1.5 Pro/Flash. These vendors use flat pricing, so third-party turn rows show a yellow “Flat price” and the reference line says “Flat price”. Vendor bills are authoritative.
 
 ### Feature switches
 
-Open **Plugins → Installed → Usage balance card**. The bottom of the bundle page has **Feature switches**:
+Open **Plugins → Installed → Usage balance card** and use the switches at the bottom to show/hide the balance card and the usage trajectory independently. A full Session collection runs when either feature is first enabled or re-enabled.
 
-- **Balance card** — show/hide the side card, the composer layout shift, and the statistics-row replacement.
-- **Usage trajectory** — show/hide the tab and its background collection.
-- **Show other information** — on: turns, steps, tokens, cache hit rate, and context; off: only balance and previous/current-turn spend.
+### Privacy
 
-The three switches are independent. Their state is stored in `localStorage` and mirrored to the Host Config when that form is served. Re-enabling Balance card or Usage trajectory runs a fresh collection of each Session's latest-turn projection.
-
-On first enable all three switches default to on; every later change is recorded immediately and restored after a DSH restart.
-
-With Balance card off: **Show other information on keeps the built-in composer statistics row; off removes the built-in row completely.** The built-in row is also kept when the card hides because the window is too narrow.
-
-### Data and privacy
-
-- The Host half registers one `usageTrack` Session projection that folds local token and timing events.
-- When enabled, the browser requests projections for every Session in the current list and caches them locally. It never writes to Session logs.
-- The card reads the existing DeepSeek account balance RPC. Balance values and query cadence match the account UI.
+- The Host adds only a `usageTrack` Session projection folded from local token/timing events.
+- The browser reads projections; it does not modify Session logs.
+- The card uses the existing DeepSeek balance RPC.
 - The plugin sends no conversation content to third parties and makes no model requests.
 
-### Compatibility and limitations
+### Limitations
 
-- A signed-in DeepSeek account is required for the balance; signed out or unavailable shows `--`.
-- The side card hides automatically when the conversation column is too narrow, so it never crushes the composer. Thresholds adapt to the column width.
-- The projection keeps at most the most recent 500 turns per Session.
-- Cost is estimated from DeepSeek's official peak/off-peak prices; the platform bill is authoritative. Chinese statutory holidays are not special-cased.
-- **Turn token usage** is a separate plugin. Disabling it does not affect this plugin.
+- No balance is shown without a logged-in DeepSeek account.
+- The card hides on very narrow windows.
+- The projection keeps up to 500 turns per Session.
+- Costs are estimates based on official prices; the platform bill is authoritative.
+- Third-party balance and final billing are available only from that vendor.
 
-<img width="1201" height="840" alt="ca345da42e89c4de862459ac74a772e8" src="https://github.com/user-attachments/assets/ac516b31-1d8b-4086-9119-568c062412b2" />
+## License
 
-<img width="1330" height="840" alt="621fd097fb47299f2be8cf9df60b3393" src="https://github.com/user-attachments/assets/4ec0917b-7c0f-4d8b-8279-0590defce22a" />
-
-<img width="1330" height="840" alt="e537a3f540b76d569d4420216a424f5d" src="https://github.com/user-attachments/assets/c3e464c5-26a7-40e3-9a38-991064e23777" />
+MIT

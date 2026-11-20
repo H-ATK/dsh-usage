@@ -1,8 +1,8 @@
 {
   "name": "dsh-usage-balance-card",
-  "version": "1.0.0",
+  "version": "1.9.0",
   "type": "module",
-  "description": "DeepSeek Harness side balance card with previous/current-turn spend, running and interrupted states, cache/context indicators, and a per-turn usage ledger.",
+  "description": "DeepSeek Harness side balance card with local/third-party usage split, dated third-party billing references, and a deduplicated per-turn usage ledger.",
   "license": "MIT",
   "author": "H-ATK",
   "repository": {
