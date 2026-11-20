@@ -24,16 +24,12 @@ const EMPTY_BUCKETS = Object.freeze({
  */
 export const Config = z.object({
   balanceCard: z.boolean().default(true).description({
-    zh: '在对话框左侧显示余额、上一轮/本轮消费和会话统计，并隐藏输入框底部的统计行',
-    en: 'Show the balance, previous/current-turn spend, and session stats left of the composer, and hide the composer statistics row',
+    zh: '在对话框左侧显示余额、上一轮/本轮消费、当前时段价格和会话统计，并隐藏输入框底部的统计行',
+    en: 'Show balance, previous/current-turn spend, current-window price, and session stats left of the composer, and hide the composer statistics row',
   }),
   usageTrajectory: z.boolean().default(true).description({
     zh: '显示“使用量轨迹”页签，并在首次启用或重新启用时收集所有对话窗口',
     en: 'Show the Usage trajectory tab and collect every Session when first enabled or re-enabled',
-  }),
-  cardDetails: z.boolean().default(true).description({
-    zh: '显示轮次、步骤、Token、缓存命中率和上下文；关闭时只显示余额、上一轮和本轮消费',
-    en: 'Show turns, steps, tokens, cache hit rate, and context; off shows only balance and previous/current-turn spend',
   }),
 })
 

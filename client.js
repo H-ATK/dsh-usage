@@ -38,6 +38,10 @@ window.__ModuleLoader__.load({
       off: { hit: 0.15, miss: 3, out: 13.5 },
       peak: { hit: 0.3, miss: 6, out: 27 },
     }
+    /** Official pricing date shown in the price table. Update with the tables above. */
+    const PRICING_DATE = '2026-11-20'
+
+
 
     const zh = {
       view: {
@@ -46,9 +50,82 @@ window.__ModuleLoader__.load({
         subtitle: '按轮次记录当前会话的 Token、缓存命中、费用、耗时与高峰时段',
         emptyTitle: '当前会话还没有对话记录',
         emptyHint: '开始一轮对话后，这里会按轮次记录用量和时间。',
-        note: '费用按 DeepSeek 官方峰谷价估算；命中率按输入 Token 计算，进度条百分比按本轮总 Token 计算，实际以平台账单为准。',
+        note: '费用按 DeepSeek 官方峰谷价估算；缓存命中率按输入 Token 计算，进度条百分比也按本轮输入 Token 计算，实际以平台账单为准。',
       },
       summary: { turns: '轮次', tokens: '总 Token', cost: '累计费用' },
+      workspace: {
+        label: '工作区 · 付费模型',
+        sessions: '个对话窗口',
+        tokens: '总 Token',
+        cost: '总消费',
+        turns: '总轮次',
+        local: '本地',
+        free: '不计费',
+        average: '当前窗口平均缓存命中率',
+        ungrouped: '未分组',
+        default: '默认工作区',
+        scope: '全部对话',
+      },
+      current: {
+        label: '当前窗口 · 付费模型',
+        average: '当前窗口平均缓存命中率',
+        scope: '当前对话',
+      },
+
+      split: {
+        title: '模型用量拆分',
+        subtitle: '本地模型不计入付费总览；第三方付费 API 计入总览并单独列出',
+        local: '本地模型 · 不计费',
+        third: '第三方付费 API · 计入总览',
+        model: '模型',
+        current: '当前窗口',
+        workspace: '工作区',
+        cost: '费用',
+        tag: '归类',
+        tokens: 'Token',
+        turns: '轮次',
+        free: '不计费',
+        included: '计入总览',
+        unknownCost: '费用以厂商账单为准',
+        rules: '统计规则',
+        rule1: 'DeepSeek 官方模型计入工作区/当前窗口总 Token、总消费和平均缓存命中率；费用按官方峰谷价估算。',
+        rule2: '其他付费 API 的 Token、费用也计入工作区/当前窗口总量，同时在下方按 provider/model 单独列出；费用以厂商账单为准，没有可用价格时显示 --。',
+        rule3: '本地模型单独统计，不计入总量、总费用和平均缓存命中率，也不扣 DeepSeek 余额；轮次明细仍保留本地 Token。',
+        rule4: '模型拆分同时显示当前窗口和工作区：本地模型用于查看本地用量，第三方 API 用于查看各家 API 自己的用量和费用。',
+        rule5: '总轮次包含本地轮次，旁边的“本地 N · 不计费”用于解释总量差异；空白新会话不计入工作区窗口数，价格表 Flash/Pro 只适用于 DeepSeek 官方模型。',
+      },
+      billing: {
+        reference: '参考价',
+        peak: '高峰',
+        off: '空闲',
+        flat: '无峰谷',
+        flatPrice: '统一价',
+        input: '输入',
+        cached: '缓存',
+        cacheWrite: '缓存写入',
+        output: '输出',
+        perM: '每 百万 Token',
+        updated: '目录更新',
+        unknown: '未收录该模型的官方参考价，费用以厂商账单为准',
+      },
+      price: {
+        official: '官方价',
+        title: '官方价格',
+        version: '版本',
+        model: '模型',
+        peak: '高峰时价格',
+        off: '空闲时价格',
+        legend: '缓存 / 输入 / 输出',
+        current: '当前',
+        hit: '缓存',
+        input: '输入',
+        output: '输出',
+        local: '本地模型',
+        localNote: '无 DeepSeek 官方价格，费用以实际渠道为准',
+        thirdParty: '第三方 API',
+        thirdPartyNote: '费用以厂商账单为准；Token 已计入总计',
+        perM: '每 百万 Token',
+      },
       table: {
         turn: '轮次',
         started: '开始时间',
@@ -67,12 +144,12 @@ window.__ModuleLoader__.load({
         maxTokens: '达到上限',
         unknown: '未知',
       },
-      peak: { on: '高峰', off: '空闲' },
+      peak: { on: '高峰', off: '空闲', local: '本地', flat: '统一价' },
       metric: {
         hit: '命中缓存',
         miss: '未命中缓存',
         hitRate: '缓存命中率',
-        share: '占总量',
+        share: '占输入',
         detail: '输入',
         cacheWrite: '缓存写入',
         output: '输出',
@@ -99,17 +176,24 @@ window.__ModuleLoader__.load({
         tokens: 'Token',
         cache: '缓存命中',
         context: '上下文',
+        peak: '高峰时段',
+        offPeak: '空闲时段',
+        input: '输入',
+        output: '输出',
+        localModel: '本地模型',
+        localFree: '不消耗余额',
+        thirdParty: '第三方 API',
+        vendorBill: '费用以厂商账单为准',
+        perM: '/ 百万 Token',
       },
       config: {
         title: '功能开关',
-        subtitle: '三个功能相互独立，可以单独开启或关闭。',
+        subtitle: '两个功能相互独立，可以单独开启或关闭。',
         balanceCard: '余额卡片',
-        balanceCardHint: '在对话框左侧显示余额、上一轮/本轮消费和会话统计，并隐藏对话框底部的统计行。',
+        balanceCardHint: '在对话框左侧显示余额、上一轮/本轮消费、当前时段价格和会话统计，并隐藏对话框底部的原生统计行。',
         usageTrajectory: '使用量轨迹',
         usageTrajectoryHint: '在会话顶部显示“使用量轨迹”页签；首次启用或重新启用时会在后台收集所有对话窗口的完整轮次。',
-        cardDetails: '显示其他信息',
-        cardDetailsHint: '开启时显示轮次、步骤、Token、缓存命中率和上下文；关闭时只显示余额、上一轮消费和本轮消费。',
-        note: '三个开关相互独立；关闭使用量轨迹不会移除余额卡片和原生统计行。',
+        note: '两个开关相互独立；关闭余额卡片会恢复原生统计行，关闭使用量轨迹不影响余额卡片。',
         on: '已开启',
         off: '已关闭',
       },
@@ -126,9 +210,82 @@ window.__ModuleLoader__.load({
         subtitle: 'Per-turn tokens, cache hits, cost, duration, and peak window',
         emptyTitle: 'No turns in this session yet',
         emptyHint: 'Start a conversation and every turn will be recorded here.',
-        note: 'Cost is estimated from DeepSeek official peak/off-peak pricing. Hit rate uses input tokens; bar percentages use the turn total. The platform bill is authoritative.',
+        note: 'Cost is estimated from DeepSeek official peak/off-peak pricing. Cache hit rate and bar percentages both use this turn’s input tokens. The platform bill is authoritative.',
       },
       summary: { turns: 'Turns', tokens: 'Total tokens', cost: 'Total cost' },
+      workspace: {
+        label: 'Workspace · paid models',
+        sessions: 'sessions',
+        tokens: 'Total tokens',
+        cost: 'Total cost',
+        turns: 'Total turns',
+        local: 'Local',
+        free: 'free',
+        average: 'Current session avg cache hit',
+        ungrouped: 'Ungrouped',
+        default: 'Default workspace',
+        scope: 'All conversations',
+      },
+      current: {
+        label: 'Current window · paid models',
+        average: 'Current window avg cache hit',
+        scope: 'Current conversation',
+      },
+
+      split: {
+        title: 'Model usage split',
+        subtitle: 'Local models are excluded from paid totals; third-party paid APIs are included and listed separately',
+        local: 'Local models · free',
+        third: 'Third-party paid APIs · included in totals',
+        model: 'Model',
+        current: 'Current window',
+        workspace: 'Workspace',
+        cost: 'Cost',
+        tag: 'Category',
+        tokens: 'tokens',
+        turns: 'turns',
+        free: 'free',
+        included: 'in totals',
+        unknownCost: 'Billing follows the provider',
+        rules: 'Statistics rules',
+        rule1: 'DeepSeek official models count toward workspace/current-window tokens, cost, and average cache hit rate; cost uses official peak/off-peak prices.',
+        rule2: 'Other paid APIs also count toward workspace/current-window totals and are listed separately by provider/model below; billing follows the provider, and cost shows -- when no price is available.',
+        rule3: 'Local models are counted separately, excluded from totals/cost/average cache, and never charged to the DeepSeek balance; their per-turn tokens remain in the ledger.',
+        rule4: 'The split shows both the current window and the workspace: local rows show local usage, while third-party rows show each vendor’s own usage and cost.',
+        rule5: 'Total turns include local turns; the “Local N · free” chip explains the difference. Blank new Sessions are excluded from the workspace window count, and Flash/Pro prices apply only to DeepSeek official models.',
+      },
+      billing: {
+        reference: 'reference',
+        peak: 'Peak',
+        off: 'Off-peak',
+        flat: 'flat',
+        flatPrice: 'Flat price',
+        input: 'Input',
+        cached: 'Cached',
+        cacheWrite: 'Cache write',
+        output: 'Output',
+        perM: 'per 1M tokens',
+        updated: 'catalog',
+        unknown: 'No reference price for this model; billing follows the provider',
+      },
+      price: {
+        official: 'Official price',
+        title: 'Official pricing',
+        version: 'Version',
+        model: 'Model',
+        peak: 'Peak price',
+        off: 'Off-peak price',
+        legend: 'Cache / Input / Output',
+        current: 'Current',
+        hit: 'Cache',
+        input: 'Input',
+        output: 'Output',
+        local: 'Local model',
+        localNote: 'No official DeepSeek price; billing follows the local route',
+        thirdParty: 'Third-party API',
+        thirdPartyNote: 'Billing follows the provider; tokens are included in totals',
+        perM: 'per 1M tokens',
+      },
       table: {
         turn: 'Turn',
         started: 'Started',
@@ -147,12 +304,12 @@ window.__ModuleLoader__.load({
         maxTokens: 'Max tokens',
         unknown: 'Unknown',
       },
-      peak: { on: 'Peak', off: 'Off-peak' },
+      peak: { on: 'Peak', off: 'Off-peak', local: 'Local', flat: 'Flat price' },
       metric: {
         hit: 'Cache hit',
         miss: 'Cache miss',
         hitRate: 'Cache hit rate',
-        share: 'of total',
+        share: 'of input',
         detail: 'Input',
         cacheWrite: 'Cache write',
         output: 'Output',
@@ -179,17 +336,24 @@ window.__ModuleLoader__.load({
         tokens: 'Token',
         cache: 'Cache hit',
         context: 'Context',
+        peak: 'Peak hours',
+        offPeak: 'Off-peak',
+        input: 'Input',
+        output: 'Output',
+        localModel: 'Local model',
+        localFree: 'No balance charge',
+        thirdParty: 'Third-party API',
+        vendorBill: 'Billing follows the provider',
+        perM: '/ 1M tokens',
       },
       config: {
         title: 'Feature switches',
-        subtitle: 'The three features are independent; each can be switched separately.',
+        subtitle: 'The two features are independent; each can be switched separately.',
         balanceCard: 'Balance card',
-        balanceCardHint: 'Show the balance, previous/current-turn spend, and session stats left of the input card, and hide the composer statistics row.',
+        balanceCardHint: 'Show balance, previous/current-turn spend, current-window price, and Session stats left of the input card, and hide the composer statistics row.',
         usageTrajectory: 'Usage trajectory',
         usageTrajectoryHint: 'Show the Usage trajectory tab; when first enabled or re-enabled it collects every Session’s complete turn history in the background.',
-        cardDetails: 'Show other information',
-        cardDetailsHint: 'On: show turns, steps, tokens, cache hit rate, and context. Off: show only balance, previous-turn spend, and current-turn spend.',
-        note: 'The three switches are independent; turning off Usage trajectory does not remove the balance card or the native statistics row.',
+        note: 'The two switches are independent; turning off Balance card restores the native statistics row, and Usage trajectory does not affect the card.',
         on: 'On',
         off: 'Off',
       },
@@ -231,19 +395,6 @@ window.__ModuleLoader__.load({
   width: 100% !important;
   max-width: none !important;
 }
-/* With the card carrying the statistics AND "other information" on, hide the
-   built-in dock; when the user turns the other information off the native row
-   must stay visible. */
-[data-dsub-side-card][data-dsub-card-details="true"] [data-composer-dock] > * {
-  visibility: hidden !important;
-}
-/* Card off + other information off: the native statistics row is gone
-   completely, including its reserved row height. */
-[data-dsub-hide-dock] [data-composer-dock] {
-  min-height: 0 !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-}
 /* A two-line composer: the card and this input share one measured height. */
 [data-dsub-side-card] [data-composer-card] {
   min-height: 108px !important;
@@ -251,13 +402,6 @@ window.__ModuleLoader__.load({
 [data-dsub-side-card] [data-composer-card] textarea,
 [data-dsub-side-card] [data-composer-card] [contenteditable="true"] {
   min-height: 48px !important;
-}
-[data-dsub-side-card][data-dsub-compact="true"] [data-composer-card] {
-  min-height: 86px !important;
-}
-[data-dsub-side-card][data-dsub-compact="true"] [data-composer-card] textarea,
-[data-dsub-side-card][data-dsub-compact="true"] [data-composer-card] [contenteditable="true"] {
-  min-height: 32px !important;
 }
 /* The toolbar is the card's last child. Extra card height must collect above
    it, so the attachment/model/send controls stay pinned to the bottom. */
@@ -274,8 +418,8 @@ window.__ModuleLoader__.load({
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
-  padding: 8px 10px;
+  gap: 1px;
+  padding: 4px 8px;
   border: 1px solid var(--dsw-alias-border-l2);
   border-radius: var(--dsw-radius-panel);
   background: var(--dsw-specific-input-major);
@@ -284,11 +428,11 @@ window.__ModuleLoader__.load({
   overflow: hidden;
   z-index: 1;
 }
-.dsub-side-top { display: flex; align-items: flex-end; gap: 2px; min-width: 0; }
-.dsub-side-balance { display: flex; align-items: baseline; gap: 4px; min-width: 0; flex: none; }
-.dsub-side-label { color: var(--dsw-alias-label-secondary); font-size: 14px; line-height: 18px; letter-spacing: .01em; white-space: nowrap; }
+.dsub-side-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1px 2px; min-width: 0; }
+.dsub-side-balance { display: flex; align-items: baseline; gap: 3px; min-width: 0; flex: 1 0 100%; }
+.dsub-side-label { color: var(--dsw-alias-label-secondary); font-size: 12.5px; line-height: 16px; letter-spacing: .01em; white-space: nowrap; }
 .dsub-side-amount {
-  font-size: 14px; line-height: 18px; font-weight: 700;
+  font-size: 12.5px; line-height: 16px; font-weight: 700;
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .dsub-side-amount[data-tone="danger"] { color: var(--dsw-alias-state-error-primary); }
@@ -296,10 +440,11 @@ window.__ModuleLoader__.load({
 .dsub-side-amount[data-tone="ok"] { color: #3b82f6; }
 .dsub-side-amount[data-tone="unknown"] { color: var(--dsw-alias-label-secondary); }
 .dsub-side-amount[data-failed="true"] { opacity: .75; }
-.dsub-side-costs { display: flex; align-items: flex-end; justify-content: flex-end; gap: 4px; margin-left: auto; min-width: 0; }
-.dsub-side-cost { display: flex; align-items: baseline; gap: 4px; color: var(--dsw-alias-label-secondary); font-size: 14px; line-height: 18px; white-space: nowrap; }
-.dsub-side-cost b { color: #f87171; font-size: 14px; line-height: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.dsub-side-status { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; line-height: 18px; font-weight: 600; color: var(--dsw-alias-label-primary); }
+.dsub-side-costs { display: flex; align-items: flex-end; justify-content: flex-start; gap: 3px; margin-left: 0; margin-bottom: 4px; min-width: 0; width: 100%; }
+.dsub-side-cost { display: flex; align-items: baseline; gap: 2px; color: var(--dsw-alias-label-secondary); font-size: 12.5px; line-height: 16px; white-space: nowrap; }
+.dsub-side-cost b { color: #f87171; font-size: 12.5px; line-height: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.dsub-side-current { margin-left: auto; }
+.dsub-side-status { display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; line-height: 16px; font-weight: 600; color: var(--dsw-alias-label-primary); }
 .dsub-side-status[data-state="running"] { color: #eab308; }
 .dsub-side-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dsw-alias-brand-primary); flex: none; }
 .dsub-side-status[data-state="running"] .dsub-side-status-dot { background: #eab308; animation: dsub-pulse 1.2s ease-in-out infinite; }
@@ -307,11 +452,25 @@ window.__ModuleLoader__.load({
 .dsub-side-status[data-state="error"] .dsub-side-status-dot { background: var(--dsw-alias-state-error-primary); }
 .dsub-side-status[data-state="blocked"] .dsub-side-status-dot,
 .dsub-side-status[data-state="maxTokens"] .dsub-side-status-dot { background: var(--dsw-alias-state-warn-primary); }
-.dsub-side-stats { display: flex; flex-wrap: wrap; gap: 2px 10px; color: var(--dsw-alias-label-secondary); font-size: 14px; line-height: 19px; font-variant-numeric: tabular-nums; }
+.dsub-side-window { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; color: var(--dsw-alias-label-secondary); font-size: 12.5px; line-height: 16px; }
+.dsub-side-window-state { display: inline-flex; align-items: center; gap: 4px; min-width: 0; font-weight: 600; line-height: 16px; white-space: nowrap; }
+.dsub-side-window-state[data-peak="true"] { color: #ef4444; }
+.dsub-side-window-state[data-peak="false"] { color: #2dd4bf; }
+.dsub-side-window-state[data-local="true"] { color: #a78bfa; }
+.dsub-side-window-state[data-external="true"] { color: #60a5fa; }
+.dsub-side-window-dot { width: 6px; height: 6px; border-radius: 50%; background: #2dd4bf; flex: none; }
+.dsub-side-window-state[data-peak="true"] .dsub-side-window-dot { background: #ef4444; }
+.dsub-side-window-state[data-local="true"] .dsub-side-window-dot { background: #a78bfa; }
+.dsub-side-window-state[data-external="true"] .dsub-side-window-dot { background: #60a5fa; }
+.dsub-side-window-local .dsub-side-window-price { color: #c4b5fd; }
+.dsub-side-window-price { display: flex; flex-direction: column; align-items: flex-end; gap: 0; min-width: 0; color: var(--dsw-alias-label-secondary); font-size: 12.5px; line-height: 16px; font-variant-numeric: tabular-nums; }
+.dsub-side-window-price-line { white-space: nowrap; }
+.dsub-side-window-price b { color: #3b82f6; font-weight: 650; }
+.dsub-side-stats { display: flex; flex-wrap: wrap; gap: 0 5px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 15px; font-variant-numeric: tabular-nums; }
 .dsub-side-stats b { color: var(--dsw-alias-label-primary); font-weight: 600; }
-.dsub-side-bottom { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.dsub-side-cache { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.dsub-side-cache-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; color: var(--dsw-alias-label-secondary); font-size: 14px; line-height: 18px; }
+.dsub-side-bottom { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.dsub-side-cache { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.dsub-side-cache-top { display: flex; align-items: baseline; justify-content: space-between; gap: 5px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 15px; }
 .dsub-side-cache-top b { color: var(--dsw-alias-label-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
 .dsub-side-bar {
   height: 7px; box-sizing: border-box;
@@ -321,18 +480,13 @@ window.__ModuleLoader__.load({
   overflow: hidden;
 }
 .dsub-side-bar > span { display: block; height: 100%; border-radius: 2px; background: #2563eb; transition: width .25s ease; }
-.dsub-side-context { flex: none; display: flex; align-items: center; gap: 6px; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 18px; }
-.dsub-side-context b { display: block; color: var(--dsw-alias-label-primary); font-size: 14px; line-height: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.dsub-side-context { flex: none; display: flex; align-items: center; gap: 4px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 16px; }
+.dsub-side-context b { display: block; color: var(--dsw-alias-label-primary); font-size: 12.5px; line-height: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .dsub-side-donut { display: block; flex: none; }
 .dsub-side-donut .dsub-donut-track { stroke: var(--dsw-alias-bg-base); }
 .dsub-side-donut .dsub-donut-fill { stroke: #2563eb; transition: stroke-dasharray .2s ease, stroke .2s ease; }
 .dsub-side-donut .dsub-donut-fill[data-tone="warn"] { stroke: #f59e0b; }
 .dsub-side-donut .dsub-donut-fill[data-tone="danger"] { stroke: #ef4444; }
-.dsub-side-simple-balance { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
-.dsub-side-simple-costs { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; min-width: 0; }
-.dsub-side-simple-cost { display: flex; flex-direction: column; gap: 0; min-width: 0; color: var(--dsw-alias-label-secondary); font-size: 14px; line-height: 18px; white-space: nowrap; }
-.dsub-side-simple-cost b { color: #f87171; font-size: 14px; line-height: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.dsub-side-simple-current { align-items: flex-end; margin-left: auto; }
 
 .dsub-view {
   isolation: isolate;
@@ -352,13 +506,14 @@ window.__ModuleLoader__.load({
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 10px 18px;
-  padding: 18px 24px 14px;
+  padding: 18px 0 14px;
   border-bottom: 1px solid var(--dsw-alias-border-l1);
   background: var(--dsw-alias-bg-layer-1);
 }
 .dsub-view-title { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .dsub-view-title h2 { margin: 0; font-size: 17px; line-height: 23px; font-weight: 650; letter-spacing: .01em; }
 .dsub-view-title p { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 18px; }
+
 .dsub-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; margin-left: auto; }
 .dsub-chip {
   display: inline-flex; align-items: baseline; gap: 6px;
@@ -369,6 +524,176 @@ window.__ModuleLoader__.load({
   font-size: 12px; line-height: 16px; white-space: nowrap;
 }
 .dsub-chip b { color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.dsub-workspace {
+  flex: none;
+  display: flex; flex-direction: column; gap: 9px;
+  margin: 12px 0 0; padding: 12px 14px;
+  box-sizing: border-box;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 12px;
+  background: var(--dsw-alias-bg-layer-2);
+}
+.dsub-workspace-card {
+  border: 1px solid rgba(96, 165, 250, .30);
+  background: rgba(59, 130, 246, .12);
+}
+.dsub-current-card {
+  margin-top: 8px; margin-bottom: 12px;
+  border: 1px solid rgba(167, 139, 250, .30);
+  background: rgba(139, 92, 246, .12);
+}
+.dsub-scope {
+  display: inline-flex; align-items: center;
+  padding: 1px 6px; border-radius: 999px;
+  background: rgba(59, 130, 246, .16);
+  color: #93c5fd;
+  font-size: 10.5px; line-height: 15px; font-weight: 650;
+  white-space: nowrap;
+}
+.dsub-scope-current { background: rgba(167, 139, 250, .18); color: #c4b5fd; }
+.dsub-workspace-card .dsub-workspace-title,
+.dsub-workspace-card .dsub-workspace-title span,
+.dsub-workspace-card .dsub-workspace-title em,
+.dsub-workspace-card .dsub-workspace-chip span { color: #93c5fd; }
+.dsub-workspace-card .dsub-workspace-title b,
+.dsub-workspace-card .dsub-workspace-chip b { color: #60a5fa; }
+.dsub-workspace-card .dsub-workspace-chip { border-color: rgba(96, 165, 250, .35); background: rgba(59, 130, 246, .08); }
+.dsub-current-card .dsub-workspace-title,
+.dsub-current-card .dsub-workspace-title span,
+.dsub-current-card .dsub-workspace-title em,
+.dsub-current-card .dsub-workspace-chip span,
+.dsub-current-card .dsub-workspace-current { color: #c4b5fd; }
+.dsub-current-card .dsub-workspace-chip b,
+.dsub-current-card .dsub-workspace-current b { color: #a78bfa; }
+.dsub-current-card .dsub-workspace-chip { border-color: rgba(167, 139, 250, .35); background: rgba(139, 92, 246, .08); }
+.dsub-current-card .dsub-workspace-current { border-top-color: rgba(167, 139, 250, .28); }
+.dsub-model-split {
+  margin: 12px 0 0; padding: 12px 14px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 12px;
+  background: var(--dsw-alias-bg-layer-2);
+}
+.dsub-split-head h3 { margin: 0; font-size: 16px; line-height: 21px; font-weight: 650; }
+.dsub-split-head p { margin: 2px 0 0; color: var(--dsw-alias-label-tertiary); font-size: 13px; line-height: 18px; }
+.dsub-split-group { margin-top: 10px; }
+.dsub-split-group h4 { margin: 0 0 3px; font-size: 13px; line-height: 18px; font-weight: 650; }
+.dsub-split-local-title { color: #a78bfa; }
+.dsub-split-third-title { color: #60a5fa; }
+.dsub-split-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.25fr) minmax(190px, 1fr) minmax(190px, 1fr) auto;
+  align-items: baseline; gap: 9px;
+  padding: 5px 0;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13.5px; line-height: 18px;
+}
+.dsub-split-header {
+  border-top: 0;
+  padding-top: 2px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px; line-height: 16px; font-weight: 600;
+}
+.dsub-split-billing {
+  margin: -1px 0 6px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px; line-height: 17px;
+}
+.dsub-split-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
+.dsub-split-row[data-local="true"] .dsub-split-name { color: #a78bfa; }
+.dsub-split-row[data-local="false"] .dsub-split-name { color: #60a5fa; }
+.dsub-split-metric { color: var(--dsw-alias-label-secondary); white-space: normal; font-variant-numeric: tabular-nums; }
+.dsub-split-cost { color: var(--dsw-alias-label-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dsub-split-row[data-local="false"] .dsub-split-cost { color: #60a5fa; }
+.dsub-split-included {
+  padding: 1px 6px; border-radius: 999px;
+  background: rgba(59, 130, 246, .12); color: #93c5fd;
+  font-size: 11px; line-height: 15px; font-style: normal; white-space: nowrap;
+}
+.dsub-rules { margin-top: 9px; padding-top: 7px; border-top: 1px solid var(--dsw-alias-border-l1); }
+.dsub-rules summary { cursor: pointer; color: var(--dsw-alias-label-secondary); font-size: 12.5px; line-height: 17px; font-weight: 600; }
+.dsub-rules ul { margin: 6px 0 0; padding-left: 17px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 17px; }
+.dsub-rules li + li { margin-top: 2px; }
+.dsub-workspace-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 9px 16px; min-width: 0; }
+.dsub-workspace-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px; min-width: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 17px; }
+.dsub-workspace-title b { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-primary); font-size: 14px; line-height: 19px; font-weight: 650; }
+.dsub-workspace-title em { color: var(--dsw-alias-label-tertiary); font-size: 11.5px; font-style: normal; line-height: 16px; white-space: nowrap; }
+.dsub-workspace-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-left: auto; }
+.dsub-workspace-chip {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  padding: 3px 9px; border-radius: 999px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px; line-height: 16px; white-space: nowrap;
+}
+.dsub-workspace-chip b { color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.dsub-local-chip { border-color: rgba(167, 139, 250, .35); background: rgba(139, 92, 246, .10); }
+.dsub-local-chip span,
+.dsub-local-chip em { color: #c4b5fd; }
+.dsub-local-chip b { color: #a78bfa; }
+.dsub-workspace-current {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px; line-height: 16px;
+}
+.dsub-workspace-current b { color: #2563eb; font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.dsub-current-card .dsub-workspace-current b { color: #a78bfa; }
+.dsub-sticky-head {
+  position: sticky; top: 0; z-index: 3;
+  background: var(--dsw-alias-bg-layer-1);
+}
+.dsub-price-table {
+  padding: 9px 12px 8px;
+  background: var(--dsw-alias-bg-layer-1);
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13.5px; line-height: 19px;
+}
+.dsub-price-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 5px; }
+.dsub-price-official {
+  padding: 1px 6px; border-radius: 999px;
+  border: 1px solid rgba(96, 165, 250, .3);
+  color: #93c5fd;
+  font-size: 11.5px; line-height: 16px; white-space: nowrap;
+}
+.dsub-price-version { margin-left: auto; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 17px; white-space: nowrap; }
+.dsub-price-grid {
+  display: grid; grid-template-columns: 84px minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center; gap: 12px;
+  padding: 3px 4px; border-radius: 4px;
+}
+.dsub-price-grid-head { color: var(--dsw-alias-label-tertiary); font-size: 12.5px; font-weight: 600; letter-spacing: .02em; }
+.dsub-price-grid[data-current="true"] { background: rgba(59, 130, 246, .08); }
+.dsub-price-grid-foot { padding-top: 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 17px; }
+.dsub-price-foot { white-space: nowrap; }
+.dsub-price-local {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px;
+  margin-top: 6px; padding: 6px 4px 0;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px; line-height: 18px;
+}
+.dsub-price-local-label { color: var(--dsw-alias-label-tertiary); }
+.dsub-price-local-name { color: #a78bfa; font-weight: 650; }
+.dsub-price-local-current {
+  padding: 0 5px; border-radius: 999px;
+  background: rgba(139, 92, 246, .16); color: #c4b5fd;
+  font-size: 11px; line-height: 15px; font-style: normal;
+}
+.dsub-price-local-note { color: var(--dsw-alias-label-tertiary); font-size: 12px; }
+.dsub-price-model { color: #60a5fa; font-weight: 650; white-space: nowrap; }
+.dsub-price-model em {
+  margin-left: 4px; padding: 0 5px; border-radius: 999px;
+  background: rgba(59, 130, 246, .16); color: #93c5fd;
+  font-size: 11px; line-height: 15px; font-style: normal;
+}
+.dsub-price-cell { display: flex; align-items: baseline; gap: 1px; min-width: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dsub-price-cell b { color: #60a5fa; font-weight: 650; }
+.dsub-price-cell i { color: var(--dsw-alias-label-tertiary); font-style: normal; }
+.dsub-price-legend { margin-top: 4px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 17px; }
 .dsub-scroll {
   flex: 1 1 auto; min-height: 0; overflow: auto;
   padding: 0 24px calc(var(--dsh-composer-height, 152px) + 22px);
@@ -385,7 +710,7 @@ window.__ModuleLoader__.load({
   box-sizing: border-box;
 }
 .dsub-table-head {
-  position: sticky; top: 0; z-index: 2;
+  position: static;
   padding: 14px 12px 9px;
   background: var(--dsw-alias-bg-layer-1);
   border-bottom: 1px solid var(--dsw-alias-border-l1);
@@ -407,6 +732,12 @@ window.__ModuleLoader__.load({
 .dsub-turn-no { display: flex; flex-direction: column; gap: 2px; }
 .dsub-turn-no b { font-size: 15px; line-height: 20px; font-weight: 650; }
 .dsub-turn-no span { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 16px; }
+.dsub-local-tag {
+  align-self: flex-start;
+  padding: 0 4px; border-radius: 999px;
+  background: rgba(139, 92, 246, .16); color: #c4b5fd;
+  font-size: 10px; line-height: 14px; font-style: normal;
+}
 .dsub-time { display: flex; flex-direction: column; gap: 2px; }
 .dsub-time b { font-weight: 550; }
 .dsub-time span { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 16px; }
@@ -425,6 +756,8 @@ window.__ModuleLoader__.load({
 }
 .dsub-peak[data-peak="true"] { color: #dc2626; background: rgba(220,38,38,.13); border: 1px solid rgba(220,38,38,.24); }
 .dsub-peak[data-peak="false"] { color: #2563eb; background: rgba(37,99,235,.11); border: 1px solid rgba(37,99,235,.2); }
+.dsub-peak[data-local="true"] { color: #a78bfa; background: rgba(139,92,246,.12); border: 1px solid rgba(167,139,250,.26); }
+.dsub-peak[data-flat="true"] { color: #fbbf24; background: rgba(245,158,11,.13); border: 1px solid rgba(245,158,11,.28); }
 .dsub-metrics {
   display: flex; flex-direction: column; gap: 10px;
   margin-top: 11px; padding: 11px 12px;
@@ -533,6 +866,42 @@ window.__ModuleLoader__.load({
       'deepseek-v4.1-flash': 'DeepSeek V4.1 Flash',
       'deepseek-v4.1-pro': 'DeepSeek V4.1 Pro',
     }
+    const PROVIDER_NAMES = {
+      openai: 'OpenAI',
+      anthropic: 'Anthropic',
+      google: 'Google',
+      openrouter: 'OpenRouter',
+      lmstudio: 'LM Studio',
+      'lm-studio': 'LM Studio',
+      ollama: 'Ollama',
+      'azure-openai': 'Azure OpenAI',
+      xai: 'xAI',
+      groq: 'Groq',
+      deepseek: 'DeepSeek',
+      'deepseek-account': 'DeepSeek',
+    }
+
+    /**
+     * Reference bills for common third-party APIs. Vendors rarely publish a
+     * machine-readable price feed, so this is a dated catalog rather than a
+     * live quote. Update the entries when the vendor changes its bill.
+     * Prices are per 1M tokens in the vendor's own currency.
+     */
+    const BILLING_CATALOG_DATE = '2026-11-20'
+    const BILLING_CATALOG = [
+      { provider: 'openai', model: /gpt-4o(?!-mini)/i, name: 'OpenAI GPT-4o', currency: 'USD', mode: 'flat', input: 2.5, cached: 1.25, output: 10 },
+      { provider: 'openai', model: /gpt-4o-mini/i, name: 'OpenAI GPT-4o mini', currency: 'USD', mode: 'flat', input: 0.15, cached: 0.075, output: 0.6 },
+      { provider: 'anthropic', model: /claude-3\.5-sonnet/i, name: 'Anthropic Claude 3.5 Sonnet', currency: 'USD', mode: 'flat', input: 3, cached: 0.3, cacheWrite: 3.75, output: 15 },
+      { provider: 'anthropic', model: /claude-3\.5-haiku/i, name: 'Anthropic Claude 3.5 Haiku', currency: 'USD', mode: 'flat', input: 0.8, cached: 0.08, cacheWrite: 1, output: 4 },
+      { provider: 'google', model: /gemini-1\.5-pro/i, name: 'Google Gemini 1.5 Pro', currency: 'USD', mode: 'flat', input: 1.25, cached: 0.31, output: 5 },
+      { provider: 'google', model: /gemini-1\.5-flash/i, name: 'Google Gemini 1.5 Flash', currency: 'USD', mode: 'flat', input: 0.075, cached: 0.018, output: 0.3 },
+    ]
+
+    function billingFor(provider, model) {
+      const p = String(provider || '').trim().toLowerCase()
+      const m = String(model || '').trim()
+      return BILLING_CATALOG.find(entry => entry.provider === p && entry.model.test(m)) ?? null
+    }
 
     /** @param {any} model @param {any} provider @returns {string} */
     function modelLabel(model, provider) {
@@ -541,7 +910,8 @@ window.__ModuleLoader__.load({
       const mapped = MODEL_NAMES[raw.toLowerCase()]
       if (mapped !== undefined) return mapped
       const source = typeof provider === 'string' && provider.trim() !== ''
-        ? `${provider.trim().charAt(0).toUpperCase()}${provider.trim().slice(1)}`
+        ? (PROVIDER_NAMES[provider.trim().toLowerCase()]
+          ?? `${provider.trim().charAt(0).toUpperCase()}${provider.trim().slice(1)}`)
         : ''
       if (source !== '' && !raw.toLowerCase().startsWith(source.toLowerCase())) return `${source} ${raw}`
       return raw
@@ -567,7 +937,7 @@ window.__ModuleLoader__.load({
         if (n >= 1e3) return `${trimFixed(n / 1e3, 1)}K`
         return formatInteger(n)
       }
-      if (n < 1e4) return formatInteger(n)
+      if (n < 1e3) return formatInteger(n)
       if (n < 1e8) return `${trimFixed(n / 1e4, n / 1e4 >= 100 ? 0 : n / 1e4 >= 10 ? 1 : 2)}万`
       if (n < 1e12) return `${trimFixed(n / 1e8, n / 1e8 >= 100 ? 0 : n / 1e8 >= 10 ? 1 : 2)}亿`
       if (n < 1e16) return `${trimFixed(n / 1e12, n / 1e12 >= 100 ? 0 : n / 1e12 >= 10 ? 1 : 2)}万亿`
@@ -625,8 +995,39 @@ window.__ModuleLoader__.load({
       return (hour >= 9 && hour < 12) || (hour >= 14 && hour < 18)
     }
 
-    /** @param {string} model @param {number} at @returns {{hit:number,miss:number,out:number}} */
-    function priceFor(model, at) {
+    /** @param {string} provider @param {string} model @returns {boolean} */
+    function isOfficialRoute(provider, model) {
+      const p = String(provider || '').trim().toLowerCase()
+      if (p !== '') return p === 'deepseek' || p.startsWith('deepseek-') || p.startsWith('deepseek/')
+      return /^deepseek[-_/]/i.test(String(model || '').trim())
+    }
+
+    const LOCAL_PROVIDER = /^(ollama|lm-?studio|llama|llama-?cpp|local|localhost|vllm|jan|kobold|text-generation-webui|oobabooga|mlx|exo|llamafile|mistral\.rs)/
+
+    function isLocalRoute(provider, model) {
+      if (isOfficialRoute(provider, model)) return false
+      const p = String(provider || '').trim().toLowerCase()
+      if (p !== '') return LOCAL_PROVIDER.test(p) || p.includes('localhost') || p.includes('/local')
+      return /^(qwen|llama|mistral|gemma|phi|local|gguf)/i.test(String(model || '').trim())
+    }
+
+    function isThirdPartyRoute(provider, model) {
+      return !isOfficialRoute(provider, model) && !isLocalRoute(provider, model)
+    }
+
+    /** @param {any} turn @returns {boolean} */
+    function isLocalTurn(turn) {
+      return turn !== null && turn !== undefined && isLocalRoute(turn.provider, turn.model)
+    }
+
+    /** @param {any} turn @returns {boolean} */
+    function isThirdPartyTurn(turn) {
+      return turn !== null && turn !== undefined && isThirdPartyRoute(turn.provider, turn.model)
+    }
+
+    /** @param {string} model @param {number} at @param {string} provider @returns {{hit:number,miss:number,out:number}|null} */
+    function priceFor(model, at, provider) {
+      if (!isOfficialRoute(provider, model)) return null
       const table = /pro/i.test(String(model || '')) ? PRO_PRICES : FLASH_PRICES
       return isPeak(at) ? table.peak : table.off
     }
@@ -645,10 +1046,20 @@ window.__ModuleLoader__.load({
     function turnCost(turn) {
       const total = totalTokens(turn)
       if (total === 0) return null
-      const price = priceFor(turn.model, turn.startedAt)
+      if (isThirdPartyRoute(turn.provider, turn.model)) {
+        const reported = Number(turn.cost)
+        return Number.isFinite(reported) && reported >= 0 ? reported : null
+      }
+      const price = priceFor(turn.model, turn.startedAt, turn.provider)
+      if (price === null) return null
       return ((num(turn.input) + num(turn.cacheWrite)) * price.miss
         + num(turn.cacheRead) * price.hit
         + num(turn.output) * price.out) / 1e6
+    }
+
+    /** Wallet spend belongs to the DeepSeek account only. */
+    function walletCost(turn) {
+      return isOfficialRoute(turn.provider, turn.model) ? turnCost(turn) : null
     }
 
     /** @param {any} turn @returns {string} */
@@ -798,7 +1209,7 @@ window.__ModuleLoader__.load({
         // ---- Feature configuration -------------------------------------
         const forms = CONFIG_ENTRY_IDS.map(id => ctx.configForms.get(id))
         const configListeners = new Set()
-        let featureConfig = { balanceCard: true, usageTrajectory: true, cardDetails: true }
+        let featureConfig = { balanceCard: true, usageTrajectory: true }
         let lastCollectEnabled = null
         const readConfig = () => {
           for (const form of forms) {
@@ -826,7 +1237,6 @@ window.__ModuleLoader__.load({
         let collectGeneration = 0
         let listSubscription
         let cardDisposer
-        let statPillDisposers = []
         let viewDisposer
         let configPanelDisposer
 
@@ -838,10 +1248,52 @@ window.__ModuleLoader__.load({
               && state.projectionsBySession[sessionId].values
               ? state.projectionsBySession[sessionId].values.usageTrack
               : undefined
-            return Array.isArray(value) ? value : undefined
+            return Array.isArray(value) ? normalizeTurns(value) : undefined
           } catch (_error) {
             return undefined
           }
+        }
+
+        const turnScore = turn => {
+          const ended = Number(turn.endedAt)
+          return [
+            Number.isFinite(ended) ? 1 : 0,
+            Number.isFinite(ended) ? ended : 0,
+            totalTokens(turn),
+            turn.status === 'completed' ? 1 : 0,
+          ]
+        }
+
+        const betterTurn = (left, right) => {
+          const a = turnScore(left)
+          const b = turnScore(right)
+          for (let i = 0; i < a.length; i += 1) {
+            if (a[i] !== b[i]) return a[i] > b[i]
+          }
+          return false
+        }
+
+        /**
+         * A projection refresh can race with a live update. Keep exactly one
+         * record per Session turn so repeated collection never appends a second
+         * identical row to the trajectory.
+         */
+        const normalizeTurns = source => {
+          if (!Array.isArray(source)) return []
+          const byTurn = new Map()
+          const extras = []
+          for (const turn of source) {
+            if (turn === null || turn === undefined || typeof turn !== 'object') continue
+            const number = Number(turn.turn)
+            if (!Number.isSafeInteger(number) || number < 0) {
+              extras.push(turn)
+              continue
+            }
+            const existing = byTurn.get(number)
+            if (existing === undefined || betterTurn(turn, existing)) byTurn.set(number, turn)
+          }
+          const normalized = [...byTurn.values()].sort((left, right) => Number(left.turn) - Number(right.turn))
+          return normalized.concat(extras)
         }
 
         const collectSession = async (sessionId, generation) => {
@@ -919,6 +1371,7 @@ window.__ModuleLoader__.load({
           const locale = useLocaleId(ctx)
           const zhUser = String(locale || '').toLowerCase().startsWith('zh')
           const liveTurns = useProjection('usageTrack')
+          const modelSelection = useProjection('modelSelection')
           const stats = useProjection('sessionStats')
           const usage = useProjection('tokenUsage')
           const pressure = useProjection('contextPressure')
@@ -929,6 +1382,7 @@ window.__ModuleLoader__.load({
           const [stored, setStored] = useState(() => readCardSnapshot(sessionId))
           const [failed, setFailed] = useState(false)
           const [geometry, setGeometry] = useState(null)
+          const [now, setNow] = useState(() => Date.now())
           const anchorRef = useRef(null)
           const alive = useRef(true)
           const refreshing = useRef(false)
@@ -938,6 +1392,11 @@ window.__ModuleLoader__.load({
           useEffect(() => {
             alive.current = true
             return () => { alive.current = false }
+          }, [])
+
+          useEffect(() => {
+            const timer = window.setInterval(() => { setNow(Date.now()) }, 15_000)
+            return () => { window.clearInterval(timer) }
           }, [])
 
           useEffect(() => {
@@ -996,8 +1455,9 @@ window.__ModuleLoader__.load({
 
           useEffect(() => {
             if (Array.isArray(liveTurns) && liveTurns.length > 0) {
-              collected.set(sessionId, liveTurns)
-              setTurns(liveTurns)
+              const value = normalizeTurns(liveTurns)
+              collected.set(sessionId, value)
+              setTurns(value)
             } else if (!Array.isArray(liveTurns)) {
               setTurns(collected.get(sessionId))
             }
@@ -1041,21 +1501,13 @@ window.__ModuleLoader__.load({
             const update = () => {
               const seatRect = seat.getBoundingClientRect()
               const width = seatRect.width
-              const baseWidth = width >= 1000
-                ? 280
+              const cardWidth = width >= 1000
+                ? 224
                 : width >= 800
-                  ? 264
+                  ? 211
                   : 0
-              const compact = config.cardDetails === false
-              const cardWidth = baseWidth === 0
-                ? 0
-                : compact
-                  ? Math.round(baseWidth * 0.8)
-                  : baseWidth
               if (cardWidth === 0) {
                 seat.removeAttribute('data-dsub-side-card')
-                seat.removeAttribute('data-dsub-compact')
-                seat.removeAttribute('data-dsub-card-details')
                 seat.style.removeProperty('--dsub-card-width')
                 seat.style.removeProperty('--dsub-card-gap')
                 seat.style.removeProperty('--dsub-card-margin')
@@ -1065,10 +1517,6 @@ window.__ModuleLoader__.load({
               const gap = 16
               const margin = 16
               seat.dataset.dsubSideCard = 'true'
-              if (compact) seat.dataset.dsubCompact = 'true'
-              else seat.removeAttribute('data-dsub-compact')
-              if (!compact) seat.dataset.dsubCardDetails = 'true'
-              else seat.removeAttribute('data-dsub-card-details')
               seat.style.setProperty('--dsub-card-width', `${cardWidth}px`)
               seat.style.setProperty('--dsub-card-gap', `${gap}px`)
               seat.style.setProperty('--dsub-card-margin', `${margin}px`)
@@ -1087,13 +1535,11 @@ window.__ModuleLoader__.load({
               cancelAnimationFrame(frame)
               observer.disconnect()
               seat.removeAttribute('data-dsub-side-card')
-              seat.removeAttribute('data-dsub-compact')
-              seat.removeAttribute('data-dsub-card-details')
               seat.style.removeProperty('--dsub-card-width')
               seat.style.removeProperty('--dsub-card-gap')
               seat.style.removeProperty('--dsub-card-margin')
             }
-          }, [sessionId, blank, config.cardDetails])
+          }, [sessionId, blank])
 
           const primary = balance && balance.hasCny
             ? { amount: balance.cny, currency: 'CNY' }
@@ -1125,10 +1571,10 @@ window.__ModuleLoader__.load({
               ? null
               : cardStatusOf(currentTurn)
           const currentCost = currentTurn !== null && currentTurn !== undefined && currentStatus === 'completed'
-            ? turnCost(currentTurn)
+            ? walletCost(currentTurn)
             : null
           const previousTurn = sessionRunning ? latestCompleted : previousCompleted
-          const previousCost = previousTurn === undefined ? null : turnCost(previousTurn)
+          const previousCost = previousTurn === undefined ? null : walletCost(previousTurn)
           const billed = usage === undefined
             ? 0
             : num(usage.uncachedInputTokens) + num(usage.cacheReadTokens) + num(usage.cacheWriteTokens)
@@ -1201,47 +1647,18 @@ window.__ModuleLoader__.load({
           }, [snapshotJson, sessionId, display.hasTurn])
           if (!config.balanceCard) return null
 
-          const donutRadius = 10
-          const donutCircumference = 2 * Math.PI * donutRadius
-          const contextWidth = display.context === null ? 0 : donutCircumference * display.context / 100
-          const contextTone = display.context === null
-            ? 'normal'
-            : display.context >= 90
-              ? 'danger'
-              : display.context >= 60
-                ? 'warn'
-                : 'normal'
-          const compactCard = config.cardDetails === false
-          const simpleBalance = h('div', { className: 'dsub-side-simple-balance' },
-            h('span', { className: 'dsub-side-label' }, t('card.balance')),
-            h('span', {
-              className: 'dsub-side-amount',
-              'data-tone': tone,
-              'data-failed': failed ? 'true' : 'false',
-            }, primary === null ? t('card.unavailable') : formatMoney(primary.amount, primary.currency, 2)),
-          )
-          const simpleCosts = display.hasTurn
-            ? h('div', { className: 'dsub-side-simple-costs' },
-              display.previousAmount !== null
-                ? h('div', { className: 'dsub-side-simple-cost dsub-side-simple-previous' },
-                  h('span', null, t('card.previousFull')),
-                  h('b', null, `-${formatMoney(display.previousAmount, 'CNY')}`),
-                )
-                : null,
-              h('div', { className: 'dsub-side-simple-cost dsub-side-simple-current' },
-                h('span', null, t('card.thisTurnFull')),
-                display.currentStatus !== null && display.currentStatus !== 'completed'
-                  ? h('span', {
-                    className: 'dsub-side-status',
-                    'data-state': display.currentStatus,
-                  },
-                    h('span', { className: 'dsub-side-status-dot', 'aria-hidden': 'true' }),
-                    t(`card.${display.currentStatus}`),
-                  )
-                  : h('b', null, display.currentAmount === null ? '--' : `-${formatMoney(display.currentAmount, 'CNY')}`),
-              ),
-            )
+          const peakNow = isPeak(now)
+          const selectedRoute = modelSelection && typeof modelSelection === 'object'
+            ? (modelSelection.next ?? modelSelection.lastUsed ?? null)
             : null
+          const selectedModelId = String(selectedRoute && selectedRoute.model || latestTurn && latestTurn.model || '')
+          const selectedProvider = String(selectedRoute && selectedRoute.provider || latestTurn && latestTurn.provider || '')
+          const cardIsLocal = selectedModelId !== '' && isLocalRoute(selectedProvider, selectedModelId)
+          const cardIsThirdParty = selectedModelId !== '' && isThirdPartyRoute(selectedProvider, selectedModelId)
+          const cardIsExternal = cardIsLocal || cardIsThirdParty
+          const cardPriceIsPro = /pro/i.test(selectedModelId)
+          const cardPrices = cardPriceIsPro ? PRO_PRICES : FLASH_PRICES
+          const currentPeriodPrice = cardIsExternal ? null : (peakNow ? cardPrices.peak : cardPrices.off)
           const cardProps = {
             className: 'dsub-side-card',
             role: 'status',
@@ -1249,9 +1666,7 @@ window.__ModuleLoader__.load({
             style: geometry === null ? undefined : { top: geometry.top, height: geometry.height },
           }
           const card = geometry !== null && geometry.height > 20
-            ? compactCard
-              ? h('div', cardProps, simpleBalance, simpleCosts)
-              : h('div', cardProps,
+            ? h('div', cardProps,
               h('div', { className: 'dsub-side-top' },
                 h('div', { className: 'dsub-side-balance' },
                   h('span', { className: 'dsub-side-label' }, t('card.balance')),
@@ -1287,67 +1702,45 @@ window.__ModuleLoader__.load({
                   )
                   : null,
               ),
-              display.showDetails && display.stats !== null
-                ? h('div', { className: 'dsub-side-stats' },
-                  h('span', null, h('b', null, formatInteger(display.stats.turns)), ' ', t('card.turns')),
-                  display.stats.steps > 0
-                    ? h('span', null, h('b', null, formatInteger(display.stats.steps)), ' ', t('card.steps'))
-                    : null,
-                  display.stats.speed !== null
-                    ? h('span', null, h('b', null, formatInteger(display.stats.speed)), ' ', t('card.speed'))
-                    : null,
-                  h('span', null, h('b', null, formatTokenCount(display.stats.tokens, zhUser)), ' ', t('card.tokens')),
+              cardIsLocal
+                ? h('div', { className: 'dsub-side-window dsub-side-window-local' },
+                  h('span', {
+                    className: 'dsub-side-window-state',
+                    'data-local': 'true',
+                  },
+                    h('span', { className: 'dsub-side-window-dot', 'aria-hidden': 'true' }),
+                    t('card.localModel')),
+                  h('span', { className: 'dsub-side-window-price' },
+                    h('span', { className: 'dsub-side-window-price-line' }, t('card.localFree'))),
                 )
-                : null,
-              display.showDetails && (display.cache !== null || display.context !== null)
-                ? h('div', { className: 'dsub-side-bottom' },
-                  h('div', { className: 'dsub-side-cache' },
-                    h('div', { className: 'dsub-side-cache-top' },
-                      h('span', null, t('card.cache')),
-                      h('b', null, display.cache === null ? '--' : `${display.cache.toFixed(1)}%`),
-                    ),
-                    h('div', { className: 'dsub-side-bar' },
-                      h('span', { style: { width: `${display.cache === null ? 0 : Math.max(0, Math.min(100, display.cache))}%` } }),
-                    ),
+                : cardIsThirdParty
+                  ? h('div', { className: 'dsub-side-window dsub-side-window-local' },
+                    h('span', {
+                      className: 'dsub-side-window-state',
+                      'data-external': 'true',
+                    },
+                      h('span', { className: 'dsub-side-window-dot', 'aria-hidden': 'true' }),
+                      t('card.thirdParty')),
+                    h('span', { className: 'dsub-side-window-price' },
+                      h('span', { className: 'dsub-side-window-price-line' }, t('card.vendorBill'))),
+                  )
+                  : h('div', { className: 'dsub-side-window' },
+                    h('span', {
+                      className: 'dsub-side-window-state',
+                      'data-peak': peakNow ? 'true' : 'false',
+                    },
+                      h('span', { className: 'dsub-side-window-dot', 'aria-hidden': 'true' }),
+                      t(peakNow ? 'card.peak' : 'card.offPeak')),
+                    h('span', { className: 'dsub-side-window-price' },
+                      h('span', { className: 'dsub-side-window-price-line' },
+                        `${t('card.input')} `,
+                        h('b', null, formatMoney(currentPeriodPrice.miss, 'CNY', 2)),
+                        ` ${t('card.perM')}`),
+                      h('span', { className: 'dsub-side-window-price-line' },
+                        `${t('card.output')} `,
+                        h('b', null, formatMoney(currentPeriodPrice.out, 'CNY', 2)),
+                        ` ${t('card.perM')}`)),
                   ),
-                  display.context === null
-                    ? null
-                    : h('div', { className: 'dsub-side-context' },
-                      h('svg', {
-                        className: 'dsub-side-donut',
-                        viewBox: '0 0 24 24',
-                        width: 30,
-                        height: 30,
-                        'aria-hidden': 'true',
-                      },
-                        h('circle', {
-                          className: 'dsub-donut-track',
-                          cx: 12,
-                          cy: 12,
-                          r: donutRadius,
-                          fill: 'none',
-                          strokeWidth: 3,
-                        }),
-                        h('circle', {
-                          className: 'dsub-donut-fill',
-                          'data-tone': contextTone,
-                          cx: 12,
-                          cy: 12,
-                          r: donutRadius,
-                          fill: 'none',
-                          strokeWidth: 3,
-                          strokeLinecap: 'round',
-                          strokeDasharray: `${contextWidth} ${donutCircumference}`,
-                          transform: 'rotate(-90 12 12)',
-                        }),
-                      ),
-                      h('span', null,
-                        h('b', null, `${display.context.toFixed(0)}%`),
-                        t('card.context'),
-                      ),
-                    ),
-                )
-                : null,
             )
             : null
 
@@ -1358,18 +1751,29 @@ window.__ModuleLoader__.load({
         }
 
         // ---- Usage trajectory view -------------------------------------
-        const UsageTrackView = ({ useProjection, sessionId }) => {
+        const UsageTrackView = ({ useProjection, useSessions, useWorkspaces, sessionId }) => {
           const config = useFeatureConfig()
           const live = useProjection('usageTrack')
+          const modelSelection = useProjection('modelSelection')
+          const sessionState = useSessions(snapshot => snapshot)
+          const workspaceState = useWorkspaces(snapshot => snapshot)
           const locale = useLocaleId(ctx)
           const zhUser = String(locale || '').toLowerCase().startsWith('zh')
           const [cached, setCached] = useState(() => collected.get(sessionId))
           const [clock, setClock] = useState(() => Date.now())
 
+          // A view can be mounted before the background full collection has
+          // filled the cache (for example after a quick enable/disable).
+          // Re-run the full pass once rather than showing a half-filled ledger.
+          useEffect(() => {
+            if (config.usageTrajectory && collected.size === 0) void collectAllSessions()
+          }, [config.usageTrajectory])
+
           useEffect(() => {
             if (Array.isArray(live) && live.length > 0) {
-              collected.set(sessionId, live)
-              setCached(live)
+              const value = normalizeTurns(live)
+              collected.set(sessionId, value)
+              setCached(value)
             } else if (!Array.isArray(live)) {
               setCached(collected.get(sessionId))
             }
@@ -1377,7 +1781,7 @@ window.__ModuleLoader__.load({
 
           const turns = useMemo(() => {
             const source = Array.isArray(live) && live.length > 0 ? live : (cached || EMPTY_TURNS)
-            return [...source].sort((left, right) => left.turn - right.turn)
+            return normalizeTurns(source)
           }, [live, cached])
 
           const anyRunning = turns.some(turn => turn.endedAt === null || turn.endedAt === undefined)
@@ -1387,11 +1791,14 @@ window.__ModuleLoader__.load({
             return () => { window.clearInterval(timer) }
           }, [anyRunning])
 
+          const billableTurns = useMemo(() => turns.filter(turn => !isLocalTurn(turn)), [turns])
+          const localTurnCount = turns.length - billableTurns.length
+
           const totals = useMemo(() => {
             let total = 0
             let cost = 0
             let priced = false
-            for (const turn of turns) {
+            for (const turn of billableTurns) {
               total += totalTokens(turn)
               const value = turnCost(turn)
               if (value !== null) {
@@ -1400,24 +1807,381 @@ window.__ModuleLoader__.load({
               }
             }
             return { total, cost, priced }
-          }, [turns])
+          }, [billableTurns])
+
+          const workspace = useMemo(() => {
+            const items = workspaceState && Array.isArray(workspaceState.items) ? workspaceState.items : []
+            return items.find(item => Array.isArray(item.sessionIds) && item.sessionIds.includes(sessionId))
+          }, [workspaceState, sessionId])
+          const workspaceSessionIds = workspace ? workspace.sessionIds : [sessionId]
+          const visibleWorkspaceIds = workspaceSessionIds.filter(id => {
+            const row = sessionState?.byId?.[id]
+            return row === undefined || row.blank !== true
+          })
+          const workspaceIds = [...new Set(visibleWorkspaceIds.length > 0 ? visibleWorkspaceIds : [sessionId])]
+          const workspaceKey = workspaceIds.join('|')
+          const workspaceTitle = workspace
+            ? (workspace.title === 'default-workspace' ? t('workspace.default') : workspace.title)
+            : t('workspace.ungrouped')
+
+          const workspaceTurns = useMemo(() => {
+            const result = []
+            for (const id of workspaceIds) {
+              const source = id === sessionId
+                ? turns
+                : (sessionState?.projectionsBySession?.[id]?.values?.usageTrack
+                  ?? collected.get(id)
+                  ?? EMPTY_TURNS)
+              if (Array.isArray(source)) result.push(...normalizeTurns(source))
+            }
+            return result
+          }, [workspaceKey, turns, sessionId, sessionState])
+
+          const workspaceBillableTurns = useMemo(
+            () => workspaceTurns.filter(turn => !isLocalTurn(turn)),
+            [workspaceTurns])
+          const workspaceLocalTurnCount = workspaceTurns.length - workspaceBillableTurns.length
+
+          const workspaceTotals = useMemo(() => {
+            let total = 0
+            let cost = 0
+            let priced = false
+            for (const turn of workspaceBillableTurns) {
+              total += totalTokens(turn)
+              const value = turnCost(turn)
+              if (value !== null) {
+                cost += value
+                priced = true
+              }
+            }
+            return { total, cost, priced }
+          }, [workspaceBillableTurns])
+
+          const currentAverage = useMemo(() => {
+            let prompt = 0
+            let cacheRead = 0
+            for (const turn of billableTurns) {
+              prompt += promptTokens(turn)
+              cacheRead += num(turn.cacheRead)
+            }
+            return prompt === 0 ? null : cacheRead / prompt * 100
+          }, [billableTurns])
+
+          const lastTurn = turns.length > 0 ? turns[turns.length - 1] : null
+          const lastTurnKey = lastTurn ? `${lastTurn.turn}:${lastTurn.endedAt ?? 'running'}` : ''
+          const selectedRoute = modelSelection && typeof modelSelection === 'object'
+            ? (modelSelection.next ?? modelSelection.lastUsed ?? null)
+            : null
+          const currentModelId = String(selectedRoute && selectedRoute.model || lastTurn && lastTurn.model || '')
+          const currentProvider = String(selectedRoute && selectedRoute.provider || lastTurn && lastTurn.provider || '')
+          const currentIsLocal = currentModelId !== '' && isLocalRoute(currentProvider, currentModelId)
+          const currentIsThirdParty = currentModelId !== '' && isThirdPartyRoute(currentProvider, currentModelId)
+          const currentIsExternal = currentIsLocal || currentIsThirdParty
+          const currentModelIsPro = /pro/i.test(currentModelId)
+          const currentIsFlash = currentModelId === '' || /flash/i.test(currentModelId)
+          const currentModelName = modelLabel(currentModelId || 'deepseek-flash', currentProvider || 'deepseek')
+          const versionModel = currentIsExternal
+            ? (lastTurn && isOfficialRoute(lastTurn.provider, lastTurn.model) ? lastTurn.model : '')
+            : currentModelId
+          const versionMatch = String(versionModel || '')
+            .match(/(?:^|[-_])v?(\d+(?:\.\d+)?)(?:[-_]|$)/i)
+          const priceVersion = `${versionMatch ? `V${versionMatch[1]}` : 'V4.1'} · ${PRICING_DATE}`
+          const flashCurrent = !currentIsExternal && !currentModelIsPro && currentIsFlash
+          const proCurrent = !currentIsExternal && currentModelIsPro
+
+          const groupRoutes = (source, predicate) => {
+            const groups = new Map()
+            for (const turn of source) {
+              if (!predicate(turn)) continue
+              const provider = String(turn.provider || '')
+              const model = String(turn.model || '')
+              const key = `${provider}|${model}`
+              let group = groups.get(key)
+              if (group === undefined) {
+                group = {
+                  key,
+                  label: modelLabel(model || '—', provider || ''),
+                  provider,
+                  model,
+                  tokens: 0,
+                  turns: 0,
+                  cost: 0,
+                  priced: false,
+                }
+                groups.set(key, group)
+              }
+              group.tokens += totalTokens(turn)
+              group.turns += 1
+              const value = turnCost(turn)
+              if (value !== null) {
+                group.cost += value
+                group.priced = true
+              }
+            }
+            return [...groups.values()].sort((left, right) => right.tokens - left.tokens)
+          }
+          const mergeScopeGroups = (currentGroups, workspaceGroups) => {
+            const merged = new Map()
+            for (const group of currentGroups) {
+              merged.set(group.key, {
+                key: group.key,
+                label: group.label,
+                provider: group.provider,
+                model: group.model,
+                current: group,
+                workspace: null,
+              })
+            }
+            for (const group of workspaceGroups) {
+              const existing = merged.get(group.key)
+              if (existing === undefined) {
+                merged.set(group.key, {
+                  key: group.key,
+                  label: group.label,
+                  provider: group.provider,
+                  model: group.model,
+                  current: null,
+                  workspace: group,
+                })
+              } else {
+                existing.workspace = group
+              }
+            }
+            return [...merged.values()].sort((left, right) => {
+              const leftTokens = (left.current?.tokens ?? 0) + (left.workspace?.tokens ?? 0)
+              const rightTokens = (right.current?.tokens ?? 0) + (right.workspace?.tokens ?? 0)
+              return rightTokens - leftTokens
+            })
+          }
+          const localGroups = useMemo(() => mergeScopeGroups(
+            groupRoutes(turns, isLocalTurn),
+            groupRoutes(workspaceTurns, isLocalTurn),
+          ), [turns, workspaceTurns])
+          const thirdPartyGroups = useMemo(() => mergeScopeGroups(
+            groupRoutes(turns, isThirdPartyTurn),
+            groupRoutes(workspaceTurns, isThirdPartyTurn),
+          ), [turns, workspaceTurns])
+
+          // Opening the view, switching workspace, and finishing a turn all
+          // refresh the *other* Sessions in this workspace. The current
+          // Session already updates from its live projection.
+          useEffect(() => {
+            if (!config.usageTrajectory) return undefined
+            for (const id of workspaceIds) {
+              if (id === sessionId) continue
+              void collectSession(id, collectGeneration)
+            }
+            return undefined
+          }, [workspaceKey, sessionId, config.usageTrajectory, lastTurnKey])
 
           const header = h('header', { className: 'dsub-view-head' },
             h('div', { className: 'dsub-view-title' },
               h('h2', null, t('view.title')),
               h('p', null, t('view.subtitle')),
             ),
-            h('div', { className: 'dsub-summary' },
-              h('span', { className: 'dsub-chip' },
-                h('span', null, t('summary.turns')),
-                h('b', null, String(turns.length))),
-              h('span', { className: 'dsub-chip' },
-                h('span', null, t('summary.tokens')),
-                h('b', null, formatTokenCount(totals.total, zhUser))),
-              h('span', { className: 'dsub-chip' },
-                h('span', null, t('summary.cost')),
-                h('b', null, totals.priced ? formatMoney(totals.cost, 'CNY') : '--')),
+          )
+
+
+          const workspaceBar = h('section', {
+            className: 'dsub-workspace dsub-workspace-card',
+            'aria-label': t('workspace.label'),
+          },
+            h('div', { className: 'dsub-workspace-head' },
+              h('div', { className: 'dsub-workspace-title' },
+                h('span', null, t('workspace.label')),
+                h('span', { className: 'dsub-scope' }, t('workspace.scope')),
+                h('b', { title: workspaceTitle }, workspaceTitle),
+                h('em', null, `${workspaceIds.length} ${t('workspace.sessions')}`),
+              ),
+              h('div', { className: 'dsub-workspace-chips' },
+                h('span', { className: 'dsub-workspace-chip' },
+                  h('span', null, t('workspace.tokens')),
+                  h('b', null, workspaceBillableTurns.length === 0 ? '--' : formatTokenCount(workspaceTotals.total, zhUser))),
+                h('span', { className: 'dsub-workspace-chip' },
+                  h('span', null, t('workspace.cost')),
+                  h('b', null, workspaceTotals.priced ? formatMoney(workspaceTotals.cost, 'CNY') : '--')),
+                h('span', { className: 'dsub-workspace-chip' },
+                  h('span', null, t('workspace.turns')),
+                  h('b', null, String(workspaceTurns.length))),
+                workspaceLocalTurnCount > 0
+                  ? h('span', { className: 'dsub-workspace-chip dsub-local-chip' },
+                    h('span', null, t('workspace.local')),
+                    h('b', null, String(workspaceLocalTurnCount)),
+                    h('em', null, t('workspace.free')))
+                  : null,
+              ),
             ),
+          )
+
+          const currentCard = h('section', {
+            className: 'dsub-workspace dsub-current-card',
+            'aria-label': t('current.label'),
+          },
+            h('div', { className: 'dsub-workspace-head' },
+              h('div', { className: 'dsub-workspace-title' },
+                h('span', null, t('current.label')),
+                h('span', { className: 'dsub-scope dsub-scope-current' }, t('current.scope')),
+              ),
+              h('div', { className: 'dsub-workspace-chips' },
+                h('span', { className: 'dsub-workspace-chip' },
+                  h('span', null, t('workspace.turns')),
+                  h('b', null, String(turns.length))),
+                h('span', { className: 'dsub-workspace-chip' },
+                  h('span', null, t('workspace.tokens')),
+                  h('b', null, billableTurns.length === 0 ? '--' : formatTokenCount(totals.total, zhUser))),
+                h('span', { className: 'dsub-workspace-chip' },
+                  h('span', null, t('workspace.cost')),
+                  h('b', null, totals.priced ? formatMoney(totals.cost, 'CNY') : '--')),
+                localTurnCount > 0
+                  ? h('span', { className: 'dsub-workspace-chip dsub-local-chip' },
+                    h('span', null, t('workspace.local')),
+                    h('b', null, String(localTurnCount)),
+                    h('em', null, t('workspace.free')))
+                  : null,
+              ),
+            ),
+            h('div', { className: 'dsub-workspace-current' },
+              h('span', null, t('current.average')),
+              h('b', null, currentAverage === null ? '--' : `${currentAverage.toFixed(1)}%`),
+            ),
+          )
+
+          const billingText = rule => {
+            const prices = []
+            if (rule.input !== undefined) prices.push(`${t('billing.input')} ${formatMoney(rule.input, rule.currency, 2)}`)
+            if (rule.cached !== undefined) prices.push(`${t('billing.cached')} ${formatMoney(rule.cached, rule.currency, 2)}`)
+            if (rule.cacheWrite !== undefined) prices.push(`${t('billing.cacheWrite')} ${formatMoney(rule.cacheWrite, rule.currency, 2)}`)
+            if (rule.output !== undefined) prices.push(`${t('billing.output')} ${formatMoney(rule.output, rule.currency, 2)}`)
+            const peakOff = rule.mode === 'flat'
+              ? t('billing.flatPrice')
+              : `${t('billing.peak')} / ${t('billing.off')}`
+            return `${rule.name} · ${t('billing.reference')} ${prices.join(' / ')} · ${t('billing.perM')} · ${peakOff} · ${t('billing.updated')} ${BILLING_CATALOG_DATE}`
+          }
+
+          const splitRow = (group, local) => {
+            const scopeText = scope => {
+              if (scope === null || scope === undefined) return '—'
+              const parts = [
+                `${formatTokenCount(scope.tokens, zhUser)} ${t('split.tokens')}`,
+                `${scope.turns} ${t('split.turns')}`,
+              ]
+              parts.push(local
+                ? t('split.free')
+                : scope.priced ? formatMoney(scope.cost, 'CNY') : t('split.unknownCost'))
+              return parts.join(' · ')
+            }
+            const billing = local ? null : billingFor(group.provider, group.model)
+            return h('div', {
+              key: `${local ? 'local' : 'third'}:${group.key}`,
+              className: 'dsub-split-item',
+            },
+              h('div', {
+                className: 'dsub-split-row',
+                'data-local': local ? 'true' : 'false',
+              },
+                h('b', { className: 'dsub-split-name' }, group.label),
+                h('span', { className: 'dsub-split-metric' }, scopeText(group.current)),
+                h('span', { className: 'dsub-split-metric' }, scopeText(group.workspace)),
+                h('em', { className: 'dsub-split-included' }, local ? t('split.free') : t('split.included')),
+              ),
+              local ? null : h('div', { className: 'dsub-split-billing' },
+                billing === null ? t('billing.unknown') : billingText(billing)),
+            )
+          }
+
+          const hasSplit = localGroups.length > 0 || thirdPartyGroups.length > 0
+          const modelSplit = hasSplit
+            ? h('section', { className: 'dsub-model-split' },
+              h('div', { className: 'dsub-split-head' },
+                h('h3', null, t('split.title')),
+                h('p', null, t('split.subtitle')),
+              ),
+              h('div', { className: 'dsub-split-row dsub-split-header' },
+                h('span', null, t('split.model')),
+                h('span', null, t('split.current')),
+                h('span', null, t('split.workspace')),
+                h('span', null, t('split.tag')),
+              ),
+              localGroups.length > 0
+                ? h('div', { className: 'dsub-split-group' },
+                  h('h4', { className: 'dsub-split-local-title' }, t('split.local')),
+                  localGroups.map(group => splitRow(group, true)))
+                : null,
+              thirdPartyGroups.length > 0
+                ? h('div', { className: 'dsub-split-group' },
+                  h('h4', { className: 'dsub-split-third-title' }, t('split.third')),
+                  thirdPartyGroups.map(group => splitRow(group, false)))
+                : null,
+              h('details', {
+                className: 'dsub-rules',
+                open: true,
+              },
+                h('summary', null, t('split.rules')),
+                h('ul', null,
+                  h('li', null, t('split.rule1')),
+                  h('li', null, t('split.rule2')),
+                  h('li', null, t('split.rule3')),
+                  h('li', null, t('split.rule4')),
+                  h('li', null, t('split.rule5')),
+                ),
+              ),
+            )
+            : null
+
+          const priceCell = table => h('span', { className: 'dsub-price-cell' },
+            h('b', null, formatMoney(table.hit, 'CNY', 2)),
+            h('i', null, ' / '),
+            h('b', null, formatMoney(table.miss, 'CNY', 2)),
+            h('i', null, ' / '),
+            h('b', null, formatMoney(table.out, 'CNY', 2)),
+          )
+          const priceGrid = (label, table, current) => h('div', {
+            className: 'dsub-price-grid',
+            'data-current': current ? 'true' : 'false',
+          },
+            h('span', { className: 'dsub-price-model' },
+              label,
+              current ? h('em', null, t('price.current')) : null),
+            priceCell(table.peak),
+            priceCell(table.off),
+          )
+
+          const priceRow = h('div', { className: 'dsub-price-table' },
+            h('div', { className: 'dsub-price-head' },
+              h('span', null, t('price.title')),
+              h('span', { className: 'dsub-price-official' }, t('price.official')),
+              h('span', { className: 'dsub-price-version' }, `${t('price.version')} ${priceVersion}`),
+            ),
+            h('div', { className: 'dsub-price-grid dsub-price-grid-head' },
+              h('span', null, t('price.model')),
+              h('span', null, t('price.peak')),
+              h('span', null, t('price.off')),
+            ),
+            priceGrid('Flash', FLASH_PRICES, flashCurrent),
+            priceGrid('Pro', PRO_PRICES, proCurrent),
+            h('div', { className: 'dsub-price-grid dsub-price-grid-foot' },
+              h('span', null, ''),
+              h('span', { className: 'dsub-price-foot' }, `${t('price.legend')} · ${t('price.perM')}`),
+              h('span', { className: 'dsub-price-foot' }, `${t('price.legend')} · ${t('price.perM')}`),
+            ),
+            currentIsExternal
+              ? h('div', { className: 'dsub-price-local' },
+                h('span', { className: 'dsub-price-local-label' }, currentIsLocal ? t('price.local') : t('price.thirdParty')),
+                h('b', { className: 'dsub-price-local-name' }, currentModelName),
+                h('em', { className: 'dsub-price-local-current' }, t('price.current')),
+                h('span', { className: 'dsub-price-local-note' }, currentIsLocal ? t('price.localNote') : t('price.thirdPartyNote')),
+              )
+              : null,
+          )
+
+          const tableHead = h('div', { className: 'dsub-row dsub-table-head' },
+            h('span', null, t('table.turn')),
+            h('span', null, t('table.started')),
+            h('span', null, t('table.duration')),
+            h('span', null, t('table.total')),
+            h('span', null, t('table.cost')),
+            h('span', null, t('table.peak')),
+            h('span', null, t('table.status')),
           )
 
           if (!config.usageTrajectory) return null
@@ -1429,8 +2193,12 @@ window.__ModuleLoader__.load({
               'aria-label': t('aria.ledger'),
             },
               h(Styles),
-              header,
               h('div', { className: 'dsub-scroll' },
+                header,
+                workspaceBar,
+                currentCard,
+                modelSplit,
+                priceRow,
                 h('div', { className: 'dsub-empty' },
                   h('span', { className: 'dsub-empty-mark', 'aria-hidden': 'true' },
                     h('svg', { viewBox: '0 0 24 24', width: 22, height: 22, fill: 'none' },
@@ -1450,18 +2218,16 @@ window.__ModuleLoader__.load({
             'aria-label': t('aria.ledger'),
           },
             h(Styles),
-            header,
             h('div', { className: 'dsub-scroll' },
+              header,
+              workspaceBar,
+              currentCard,
+              modelSplit,
+              h('div', { className: 'dsub-sticky-head' },
+                priceRow,
+                tableHead,
+              ),
               h('div', { className: 'dsub-table' },
-                h('div', { className: 'dsub-row dsub-table-head' },
-                  h('span', null, t('table.turn')),
-                  h('span', null, t('table.started')),
-                  h('span', null, t('table.duration')),
-                  h('span', null, t('table.total')),
-                  h('span', null, t('table.cost')),
-                  h('span', null, t('table.peak')),
-                  h('span', null, t('table.status')),
-                ),
                 turns.map(turn => {
                   const started = turn.startedAt
                   const ended = turn.endedAt
@@ -1470,12 +2236,15 @@ window.__ModuleLoader__.load({
                     ? null
                     : Math.max(0, (running ? clock : ended) - started)
                   const total = totalTokens(turn)
+                  const prompt = promptTokens(turn)
                   const hit = num(turn.cacheRead)
                   const miss = num(turn.input) + num(turn.cacheWrite)
-                  const hitPercent = total === 0 ? 0 : hit / total * 100
-                  const missPercent = total === 0 ? 0 : miss / total * 100
+                  const hitPercent = prompt === 0 ? 0 : hit / prompt * 100
+                  const missPercent = prompt === 0 ? 0 : miss / prompt * 100
                   const rate = cacheHitRate(turn)
-                  const peak = isPeak(started)
+                  const local = isLocalTurn(turn)
+                  const flat = isThirdPartyTurn(turn)
+                  const peak = !local && !flat && isPeak(started)
                   const cost = turnCost(turn)
                   const status = running
                     ? 'running'
@@ -1500,6 +2269,7 @@ window.__ModuleLoader__.load({
                       h('div', { className: 'dsub-cell dsub-turn-no' },
                         h('b', null, `#${turn.turn}`),
                         h('span', { title: turn.model || '' }, modelLabel(turn.model, turn.provider)),
+                        local ? h('em', { className: 'dsub-local-tag' }, t('peak.local')) : null,
                       ),
                       h('div', { className: 'dsub-cell dsub-time', title: formatFullTime(started, zhUser) },
                         h('b', null, formatClock(started, zhUser)),
@@ -1509,8 +2279,8 @@ window.__ModuleLoader__.load({
                       h('div', { className: 'dsub-cell', title: `${formatInteger(total)} ${t('table.total')}` }, formatTokenCount(total, zhUser)),
                       h('div', { className: 'dsub-cell dsub-cost' }, cost === null ? '--' : formatMoney(cost, 'CNY')),
                       h('div', { className: 'dsub-cell' },
-                        h('span', { className: 'dsub-peak', 'data-peak': peak ? 'true' : 'false' },
-                          peak ? t('peak.on') : t('peak.off'))),
+                        h('span', { className: 'dsub-peak', 'data-peak': peak ? 'true' : 'false', 'data-local': local ? 'true' : 'false', 'data-flat': flat ? 'true' : 'false' },
+                          local ? t('peak.local') : flat ? t('peak.flat') : peak ? t('peak.on') : t('peak.off'))),
                       h('div', { className: 'dsub-cell' },
                         h('span', { className: 'dsub-status' },
                           h('span', { className: 'dsub-dot', 'aria-hidden': 'true' }),
@@ -1559,10 +2329,10 @@ window.__ModuleLoader__.load({
 
         // ---- Slot wiring and the plugin-page switches -----------------
         const syncSlots = () => {
-          const hideDock = !featureConfig.balanceCard && featureConfig.cardDetails === false
           if (typeof document !== 'undefined') {
-            if (hideDock) document.documentElement.setAttribute('data-dsub-hide-dock', 'true')
-            else document.documentElement.removeAttribute('data-dsub-hide-dock')
+            // Migration from the removed "other information" mode: clear its
+            // legacy root/seat switches so the native row cannot stay hidden.
+            document.documentElement.removeAttribute('data-dsub-hide-dock')
           }
           if (featureConfig.balanceCard && cardDisposer === undefined) {
             cardDisposer = ctx.slots.inject('conversation.input.dock', () => ctx.slots.register({
@@ -1574,44 +2344,16 @@ window.__ModuleLoader__.load({
           } else if (!featureConfig.balanceCard && cardDisposer !== undefined) {
             cardDisposer()
             cardDisposer = undefined
-            // The card is gone; release the seat layout switch so the built-in
-            // composer statistics row is not left hidden by the card CSS.
+            // Release the seat layout switch so the built-in statistics row
+            // returns immediately when the card feature is turned off.
             for (const seat of document.querySelectorAll('[data-dsub-side-card]')) {
               seat.removeAttribute('data-dsub-side-card')
               seat.removeAttribute('data-dsub-compact')
+              seat.removeAttribute('data-dsub-card-details')
               seat.style.removeProperty('--dsub-card-width')
               seat.style.removeProperty('--dsub-card-gap')
               seat.style.removeProperty('--dsub-card-margin')
             }
-          }
-          // The card's own CSS hides the shipped statistics row while the card
-          // is visible. The replacement entries are needed only when the card
-          // is off and the user explicitly turns "other information" off; the
-          // card must not shadow the built-in row when it is hidden at narrow
-          // widths, and it must not hide it when the card feature is off.
-          const replaceStats = !featureConfig.balanceCard && featureConfig.cardDetails === false
-          if (replaceStats && statPillDisposers.length === 0) {
-            // The shipped pills register at list priority 0. Reusing their ids
-            // at the same priority throws during boot, so a replacement must
-            // register at a lower priority: the lowest live entry wins and the
-            // shipped pill is shadowed rather than duplicated.
-            statPillDisposers = [
-              ctx.slots.inject('conversation.composer.dock', () => ctx.slots.register({
-                name: 'conversation.composer.dock',
-                id: 'activity',
-                order: 0,
-                priority: -1,
-              }, () => null)),
-              ctx.slots.inject('conversation.composer.dock', () => ctx.slots.register({
-                name: 'conversation.composer.dock',
-                id: 'usage',
-                order: 1,
-                priority: -1,
-              }, () => null)),
-            ]
-          } else if (!replaceStats && statPillDisposers.length > 0) {
-            for (const dispose of statPillDisposers) dispose()
-            statPillDisposers = []
           }
           if (featureConfig.usageTrajectory && viewDisposer === undefined) {
             viewDisposer = ctx.slots.inject('conversation.view', () => ctx.slots.register({
@@ -1628,9 +2370,11 @@ window.__ModuleLoader__.load({
         }
 
         const applyConfig = next => {
-          const changed = next.balanceCard !== featureConfig.balanceCard
-            || next.usageTrajectory !== featureConfig.usageTrajectory
-            || next.cardDetails !== featureConfig.cardDetails
+          const previous = featureConfig
+          const surfaceReenabled = (next.balanceCard && !previous.balanceCard)
+            || (next.usageTrajectory && !previous.usageTrajectory)
+          const changed = next.balanceCard !== previous.balanceCard
+            || next.usageTrajectory !== previous.usageTrajectory
           featureConfig = next
           if (changed) {
             for (const listener of configListeners) listener()
@@ -1639,7 +2383,7 @@ window.__ModuleLoader__.load({
           // deferred so a service-context hiccup can never block the card/tab.
           syncSlots()
           const shouldCollect = next.balanceCard || next.usageTrajectory
-          if (shouldCollect && lastCollectEnabled !== true) {
+          if (shouldCollect && (lastCollectEnabled !== true || surfaceReenabled)) {
             window.setTimeout(() => {
               try {
                 startCollection()
@@ -1693,7 +2437,6 @@ window.__ModuleLoader__.load({
               ),
               row('balanceCard', 'config.balanceCard', 'config.balanceCardHint'),
               row('usageTrajectory', 'config.usageTrajectory', 'config.usageTrajectoryHint'),
-              row('cardDetails', 'config.cardDetails', 'config.cardDetailsHint'),
               h('p', { className: 'dsub-config-note' }, t('config.note')),
             ))
         }
@@ -1701,7 +2444,11 @@ window.__ModuleLoader__.load({
         const ensureConfigDefaults = () => {
           const local = readLocalConfig()
           let changed = false
-          for (const field of ['balanceCard', 'usageTrajectory', 'cardDetails']) {
+          if (Object.prototype.hasOwnProperty.call(local, 'cardDetails')) {
+            delete local.cardDetails
+            changed = true
+          }
+          for (const field of ['balanceCard', 'usageTrajectory']) {
             if (local[field] === undefined) {
               local[field] = true
               changed = true
@@ -1721,9 +2468,6 @@ window.__ModuleLoader__.load({
             usageTrajectory: local.usageTrajectory !== undefined
               ? local.usageTrajectory !== false
               : host === undefined ? true : host.usageTrajectory !== false,
-            cardDetails: local.cardDetails !== undefined
-              ? local.cardDetails !== false
-              : host === undefined ? true : host.cardDetails !== false,
           })
         }
 
@@ -1741,11 +2485,8 @@ window.__ModuleLoader__.load({
             collectGeneration += 1
             if (listSubscription !== undefined) { listSubscription(); listSubscription = undefined }
             if (cardDisposer !== undefined) { cardDisposer(); cardDisposer = undefined }
-            for (const dispose of statPillDisposers) dispose()
-            statPillDisposers = []
             if (viewDisposer !== undefined) { viewDisposer(); viewDisposer = undefined }
             if (configPanelDisposer !== undefined) { configPanelDisposer(); configPanelDisposer = undefined }
-            if (typeof document !== 'undefined') document.documentElement.removeAttribute('data-dsub-hide-dock')
           }
         }, 'usage-balance: feature switches')
       },
