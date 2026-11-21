@@ -3,6 +3,7 @@
 ## 1.15.5
 
 - Declare `engines.dsh` (`>=0.2.2-rc.3`, the running Host runtime) and `dsh.manifestVersion` for marketplace publishing.
+- Rename the public plugin display name to 使用量统计 / Usage statistics and refresh the README screenshots.
 
 ## 1.15.4
 

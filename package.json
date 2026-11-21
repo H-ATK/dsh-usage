@@ -2,7 +2,7 @@
   "name": "dsh-usage-balance-card",
   "version": "1.15.5",
   "type": "module",
-  "description": "DeepSeek Harness side balance card with local/third-party usage split, dated third-party billing references, and a deduplicated per-turn usage ledger.",
+  "description": "DeepSeek Harness usage statistics: workspace, model, and channel token/cost accounting, per-turn ledger, price catalog, and CSV/Excel export.",
   "license": "MIT",
   "author": "H-ATK",
   "repository": {
@@ -41,6 +41,7 @@
     "pricing.json",
     "locale/*.json",
     "icon.svg",
+    "docs",
     "README.md",
     "INSTALL.md",
     "CHANGELOG.md",

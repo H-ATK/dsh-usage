@@ -23,7 +23,7 @@ dsh plugin --profile desktop add dsh-usage-balance-card
 1. 解压仓库或 Release 里的 ZIP。
 2. 打开 DSH 的 **插件 → 添加插件**，选择包含 `package.json` 的目录。
 3. 重启 DSH（如果提示需要重启）。
-4. 打开 **插件 → 已安装 → 用量余额卡片**。
+4. 打开 **插件 → 已安装 → 使用量统计**。
 5. 首次启用时两个开关默认全部开启：
    - 余额卡片
    - 使用量轨迹
@@ -72,7 +72,7 @@ dsh plugin --profile desktop add dsh-usage-balance-card
 1. Extract the repository or Release ZIP.
 2. Open **Plugins → Add plugin** and choose the folder containing `package.json`.
 3. Restart DSH if prompted.
-4. Open **Plugins → Installed → Usage balance card**.
+4. Open **Plugins → Installed → Usage statistics**.
 5. On first enable both switches default to on:
    - Balance card
    - Usage trajectory

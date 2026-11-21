@@ -1,10 +1,12 @@
-# 用量余额卡片 / Usage balance card
+# 使用量统计 / Usage statistics
 
 > 本插件不会额外消耗 Token。它只读取本地会话投影和账户余额，不调用模型、不追加对话消息。
 >
 > This plugin adds no token charges. It reads local Session projections and the account balance only; it makes no model requests and appends no chat messages.
 
-![Usage balance card](https://github.com/user-attachments/assets/8ee55beb-0794-4ed3-9055-7f7c89671a79)
+![使用量统计 · 用量总览](docs/usage-overview.png)
+
+![使用量统计 · 使用量轨迹](docs/usage-trajectory.png)
 
 ## 安装 / Install
 
@@ -14,7 +16,7 @@
 dsh plugin --profile desktop add github:H-ATK/dsh-usage#v1.15.5
 ```
 
-安装后重启 DSH，打开 **插件 → 已安装 → 用量余额卡片**。
+安装后重启 DSH，打开 **插件 → 已安装 → 使用量统计**。
 
 也可以下载仓库 ZIP，解压后在 **插件 → 添加插件** 中选择包含 `package.json` 的文件夹。
 
@@ -92,7 +94,7 @@ dsh plugin --profile desktop add github:H-ATK/dsh-usage#v1.15.5
 
 ### 功能开关
 
-打开 **插件 → 已安装 → 用量余额卡片**，页面底部有独立开关：
+打开 **插件 → 已安装 → 使用量统计**，页面底部有独立开关：
 
 - **余额卡片**
 - **使用量轨迹**
