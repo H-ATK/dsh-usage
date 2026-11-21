@@ -1,6 +1,6 @@
 {
   "name": "dsh-usage-balance-card",
-  "version": "1.15.5",
+  "version": "1.15.7",
   "type": "module",
   "description": "DeepSeek Harness usage statistics: workspace, model, and channel token/cost accounting, per-turn ledger, price catalog, and CSV/Excel export.",
   "license": "MIT",

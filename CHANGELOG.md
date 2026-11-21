@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.15.7
+
+- Refresh the published package at a new patch version; no functional changes.
+
+## 1.15.6
+
+- Publish the latest bilingual UI, three-feature documentation, screenshots, and archive changes under a new patch version.
+
 ## 1.15.5
 
 - Declare `engines.dsh` (`>=0.2.2-rc.3`, the running Host runtime) and `dsh.manifestVersion` for marketplace publishing.
