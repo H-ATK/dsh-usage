@@ -1,7 +1,8 @@
 {
-  "version": "2026-11-20.1",
-  "updatedAt": "2026-11-20T12:00:00+08:00",
-  "source": "builtin",
+  "version": "2026-11-21.1",
+  "updatedAt": "2026-11-21T10:30:00+08:00",
+  "source": "curated official list prices",
+  "unit": "USD per 1M tokens",
   "models": [
     {
       "provider": "openai",
@@ -26,6 +27,72 @@
       "output": 0.6
     },
     {
+      "provider": "openai",
+      "model": "gpt-4.1",
+      "name": "OpenAI GPT-4.1",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 2,
+      "cached": 0.5,
+      "cacheWrite": 2,
+      "output": 8
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-4.1-mini",
+      "name": "OpenAI GPT-4.1 mini",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 0.4,
+      "cached": 0.1,
+      "cacheWrite": 0.4,
+      "output": 1.6
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-4.1-nano",
+      "name": "OpenAI GPT-4.1 nano",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 0.1,
+      "cached": 0.025,
+      "cacheWrite": 0.1,
+      "output": 0.4
+    },
+    {
+      "provider": "openai",
+      "model": "o3",
+      "name": "OpenAI o3",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 2,
+      "cached": 0.5,
+      "cacheWrite": 2,
+      "output": 8
+    },
+    {
+      "provider": "openai",
+      "model": "o3-mini",
+      "name": "OpenAI o3-mini",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 1.1,
+      "cached": 0.55,
+      "cacheWrite": 1.1,
+      "output": 4.4
+    },
+    {
+      "provider": "openai",
+      "model": "o4-mini",
+      "name": "OpenAI o4-mini",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 1.1,
+      "cached": 0.275,
+      "cacheWrite": 1.1,
+      "output": 4.4
+    },
+    {
       "provider": "anthropic",
       "model": "claude-3.5-sonnet",
       "name": "Anthropic Claude 3.5 Sonnet",
@@ -48,6 +115,39 @@
       "output": 4
     },
     {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-5",
+      "name": "Anthropic Claude Sonnet 4.5",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 3,
+      "cached": 0.3,
+      "cacheWrite": 3.75,
+      "output": 15
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-opus-4-5",
+      "name": "Anthropic Claude Opus 4.5",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 5,
+      "cached": 0.5,
+      "cacheWrite": 6.25,
+      "output": 25
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5",
+      "name": "Anthropic Claude Haiku 4.5",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 1,
+      "cached": 0.1,
+      "cacheWrite": 1.25,
+      "output": 5
+    },
+    {
       "provider": "google",
       "model": "gemini-1.5-pro",
       "name": "Google Gemini 1.5 Pro",
@@ -68,6 +168,61 @@
       "cached": 0.018,
       "cacheWrite": 0.075,
       "output": 0.3
+    },
+    {
+      "provider": "google",
+      "model": "gemini-2.5-pro",
+      "name": "Google Gemini 2.5 Pro",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 1.25,
+      "cached": 0.31,
+      "cacheWrite": 1.25,
+      "output": 10
+    },
+    {
+      "provider": "google",
+      "model": "gemini-2.5-flash",
+      "name": "Google Gemini 2.5 Flash",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 0.3,
+      "cached": 0.075,
+      "cacheWrite": 0.3,
+      "output": 2.5
+    },
+    {
+      "provider": "google",
+      "model": "gemini-2.5-flash-lite",
+      "name": "Google Gemini 2.5 Flash-Lite",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 0.1,
+      "cached": 0.025,
+      "cacheWrite": 0.1,
+      "output": 0.4
+    },
+    {
+      "provider": "google",
+      "model": "gemini-2.0-flash",
+      "name": "Google Gemini 2.0 Flash",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 0.1,
+      "cached": 0.025,
+      "cacheWrite": 0.1,
+      "output": 0.4
+    },
+    {
+      "provider": "xai",
+      "model": "grok-4.3",
+      "name": "xAI Grok 4.3",
+      "currency": "USD",
+      "mode": "flat",
+      "input": 1.25,
+      "cached": 0.2,
+      "cacheWrite": 1.25,
+      "output": 2.5
     }
   ]
 }
