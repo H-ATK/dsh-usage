@@ -7,8 +7,35 @@
  * collect every Session without paging conversation history.
  */
 import z from '@deepseek-ai/schemastery'
+import { spawn } from 'node:child_process'
+import { existsSync } from 'node:fs'
+import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
-const MAX_TURNS = 500
+// Keep the complete durable turn history. The previous 500-turn cut made
+// "all time" silently lose old turns; 100k is only a pathological safety cap.
+const MAX_TURNS = 100_000
+const PRICING_PATH = new URL('./pricing.json', import.meta.url)
+const PRICING_ROUTE = '/dsh-usage-balance-card/pricing.json'
+const REPORT_ROUTE = '/dsh-usage-balance-card/report-window'
+const ARCHIVE_ROUTE = '/dsh-usage-balance-card/archive'
+const REPORT_MAX_BYTES = 2_000_000
+const ARCHIVE_MAX_BYTES = 20_000_000
+const ARCHIVE_MAX_TURNS = 100_000
+const ARCHIVE_FILE = path.join(
+  process.env.DSH_PROFILE_DIR || process.env.DSH_HOME || path.join(process.env.USERPROFILE || '.', '.dsh'),
+  'storages',
+  'dsh-usage-balance',
+  'archive.json',
+)
+const PRICING_SOURCES = [
+  { url: 'https://api.github.com/repos/H-ATK/dsh-usage/contents/pricing.json?ref=main', accept: 'application/vnd.github.raw' },
+  { url: 'https://raw.githubusercontent.com/H-ATK/dsh-usage/main/pricing.json', accept: 'application/json' },
+  { url: 'https://cdn.jsdelivr.net/gh/H-ATK/dsh-usage@main/pricing.json', accept: 'application/json' },
+]
+const PRICING_TTL_MS = 6 * 60 * 60 * 1000
 
 const EMPTY_BUCKETS = Object.freeze({
   input: 0,
@@ -30,6 +57,10 @@ export const Config = z.object({
   usageTrajectory: z.boolean().default(true).description({
     zh: '显示“使用量轨迹”页签，并在首次启用或重新启用时收集所有对话窗口',
     en: 'Show the Usage trajectory tab and collect every Session when first enabled or re-enabled',
+  }),
+  usageOverview: z.boolean().default(true).description({
+    zh: '显示“用量总览”页签，按今日、本月和全部汇总用量趋势',
+    en: 'Show the Usage overview tab with today, this month, and all-time totals and trends',
   }),
 })
 
@@ -225,12 +256,319 @@ const usageTrackProjection = {
   },
 }
 
-/** The projection registry is the Host half's whole purpose. */
-export const inject = ['sessionProjections']
+/** @param {unknown} value */
+function validPricing(value) {  if (value === null || typeof value !== 'object' || !Array.isArray(value.models)) return false
+  if (typeof value.version !== 'string' || value.version === '') return false
+  return value.models.every(entry => entry !== null
+    && typeof entry === 'object'
+    && typeof entry.provider === 'string'
+    && typeof entry.model === 'string'
+    && typeof entry.currency === 'string'
+    && Number.isFinite(Number(entry.input))
+    && Number.isFinite(Number(entry.output)))
+}
+
+async function readBundledPricing() {
+  const text = await readFile(PRICING_PATH, 'utf8')
+  const value = JSON.parse(text)
+  if (!validPricing(value)) throw new Error('Invalid bundled pricing catalog')
+  return value
+}
+
+async function fetchJson(source) {
+  const response = await fetch(source.url, {
+    headers: { accept: source.accept, 'user-agent': 'dsh-usage-balance-card' },
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  const text = await response.text()
+  if (text.length > 1_000_000) throw new Error('Pricing catalog is too large')
+  const value = JSON.parse(text)
+  if (!validPricing(value)) throw new Error('Invalid pricing catalog')
+  return value
+}
+
+let pricingCache = null
+let pricingCachedAt = 0
+let pricingFailed = false
+let pricingInFlight = null
+let bundledPricing = null
+
+async function currentPricing() {
+  const now = Date.now()
+  if (pricingCache !== null && now - pricingCachedAt < PRICING_TTL_MS) {
+    return {
+      source: pricingFailed ? 'cache' : 'remote',
+      error: pricingFailed,
+      catalog: pricingCache,
+    }
+  }
+  if (pricingInFlight !== null) return pricingInFlight
+  pricingInFlight = (async () => {
+    for (const source of PRICING_SOURCES) {
+      try {
+        const catalog = await fetchJson(source)
+        pricingCache = catalog
+        pricingCachedAt = Date.now()
+        pricingFailed = false
+        return { source: 'remote', error: false, catalog }
+      } catch (_error) {
+        // Try the mirror, then fall back to the last good/bundled catalog.
+      }
+    }
+    pricingFailed = true
+    if (pricingCache !== null) {
+      return { source: 'cache', error: true, catalog: pricingCache }
+    }
+    if (bundledPricing === null) bundledPricing = await readBundledPricing()
+    return { source: 'builtin', error: true, catalog: bundledPricing }
+  })()
+  try {
+    return await pricingInFlight
+  } finally {
+    pricingInFlight = null
+  }
+}
+
+/** @param {import('node:http').IncomingMessage} req */
+function isLoopbackRequest(req) {
+  const address = String(req.socket.remoteAddress || '')
+  return address === '127.0.0.1'
+    || address === '::1'
+    || address.startsWith('::ffff:127.')
+}
+
+/** @param {import('node:http').IncomingMessage} req */
+async function readRequestBody(req, maxBytes = REPORT_MAX_BYTES) {
+  const chunks = []
+  let total = 0
+  for await (const chunk of req) {
+    total += chunk.length
+    if (total > maxBytes) throw new Error('report body too large')
+    chunks.push(chunk)
+  }
+  return Buffer.concat(chunks).toString('utf8')
+}
+
+/** @param {string} title @param {string} html @param {number} width @param {number} height */
+async function openNativeReport(title, html, width, height) {
+  const file = path.join(tmpdir(), `dsh-usage-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.html`)
+  await writeFile(file, html, 'utf8')
+  const url = pathToFileURL(file).href
+  const candidates = [
+    process.env.DSH_USAGE_BROWSER,
+    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+  ].filter(value => typeof value === 'string' && value !== '' && existsSync(value))
+  const size = `${Math.max(560, Math.min(1600, Math.round(width)))}`
+    + `,${Math.max(420, Math.min(1200, Math.round(height)))}`
+  let opened = false
+  for (const exe of candidates) {
+    try {
+      const child = spawn(exe, [`--app=${url}`, `--window-size=${size}`, '--new-window'], {
+        detached: true,
+        stdio: 'ignore',
+        windowsHide: false,
+      })
+      child.unref()
+      opened = true
+      break
+    } catch (_error) {
+      // Try the next Chromium/Edge installation.
+    }
+  }
+  if (!opened) {
+    try {
+      const child = spawn('cmd.exe', ['/c', 'start', '', file], {
+        detached: true,
+        stdio: 'ignore',
+        windowsHide: true,
+      })
+      child.unref()
+      opened = true
+    } catch (_error) {
+      opened = false
+    }
+  }
+  if (!opened) {
+    await unlink(file).catch(() => {})
+    throw new Error('No Edge/Chrome executable found')
+  }
+  setTimeout(() => { void unlink(file).catch(() => {}) }, 15 * 60 * 1000).unref()
+  return file
+}
+
+/** Persistent Host-side archive for deleted Sessions and long all-time history. */
+let archiveCache
+let archiveWriteChain = Promise.resolve()
+
+function validArchiveSession(value) {
+  return value !== null && typeof value === 'object' && Array.isArray(value.turns)
+}
+
+function mergeArchiveTurns(existing, incoming) {
+  const byTurn = new Map()
+  for (const turn of [...(Array.isArray(existing) ? existing : []), ...(Array.isArray(incoming) ? incoming : [])]) {
+    if (turn === null || typeof turn !== 'object') continue
+    const number = Number(turn.turn)
+    if (!Number.isSafeInteger(number) || number < 0) continue
+    byTurn.set(number, turn)
+  }
+  return [...byTurn.values()].sort((left, right) => Number(left.turn) - Number(right.turn))
+}
+
+function pruneArchiveSessions(sessions) {
+  const records = Object.entries(sessions)
+    .filter(([id, record]) => id !== '' && validArchiveSession(record))
+    .sort((left, right) => Number(right[1].updatedAt ?? 0) - Number(left[1].updatedAt ?? 0))
+  const result = {}
+  let kept = 0
+  for (const [id, record] of records) {
+    if (kept >= ARCHIVE_MAX_TURNS) break
+    const turns = mergeArchiveTurns([], record.turns).slice(-(ARCHIVE_MAX_TURNS - kept))
+    result[id] = { turns, updatedAt: Number(record.updatedAt ?? Date.now()) }
+    kept += turns.length
+  }
+  return result
+}
+
+async function readHostArchive() {
+  if (archiveCache !== undefined) return archiveCache
+  try {
+    const raw = await readFile(ARCHIVE_FILE, 'utf8')
+    const parsed = JSON.parse(raw)
+    archiveCache = parsed !== null && typeof parsed === 'object' && parsed.sessions !== null && typeof parsed.sessions === 'object'
+      ? pruneArchiveSessions(parsed.sessions)
+      : {}
+  } catch (_error) {
+    archiveCache = {}
+  }
+  return archiveCache
+}
+
+function writeHostArchive(sessions) {
+  const next = pruneArchiveSessions(sessions)
+  archiveCache = next
+  archiveWriteChain = archiveWriteChain.then(async () => {
+    await mkdir(path.dirname(ARCHIVE_FILE), { recursive: true })
+    const temporary = `${ARCHIVE_FILE}.tmp`
+    await writeFile(temporary, JSON.stringify({ version: 1, sessions: next }), 'utf8')
+    await rename(temporary, ARCHIVE_FILE)
+  }).catch(() => {})
+  return archiveWriteChain
+}
+
+async function mergeHostArchive(incoming) {
+  const current = await readHostArchive()
+  const next = { ...current }
+  if (incoming === null || typeof incoming !== 'object') return current
+  for (const [id, record] of Object.entries(incoming)) {
+    if (typeof id !== 'string' || id === '' || id.length > 300 || !validArchiveSession(record)) continue
+    const turns = mergeArchiveTurns(next[id]?.turns, record.turns)
+    if (turns.length === 0) continue
+    next[id] = { turns, updatedAt: Number(record.updatedAt ?? Date.now()) }
+  }
+  await writeHostArchive(next)
+  return archiveCache ?? current
+}
+
+/** The projection registry and the same-origin pricing route. */
+export const inject = ['sessionProjections', 'webServer']
 
 /**
  * @param {import('@deepseek-ai/cordis').Context} ctx
  */
 export async function apply(ctx) {
   await ctx.sessionProjections.register(usageTrackProjection)
+  const webServer = ctx.get('webServer')
+  if (webServer !== undefined) {
+    ctx.effect(() => webServer.register({
+      kind: 'exact',
+      path: PRICING_ROUTE,
+      resource: async () => {
+        const payload = await currentPricing()
+        return new Response(JSON.stringify(payload), {
+          headers: {
+            'content-type': 'application/json; charset=utf-8',
+            'cache-control': 'no-store',
+          },
+        })
+      },
+    }), 'usage-balance: pricing route')
+
+    ctx.effect(() => webServer.register({
+      kind: 'exact',
+      path: REPORT_ROUTE,
+      handler: async (req, res) => {
+        const reply = (status, payload) => {
+          res.writeHead(status, {
+            'content-type': 'application/json; charset=utf-8',
+            'cache-control': 'no-store',
+          })
+          res.end(JSON.stringify(payload))
+        }
+        if (req.method !== 'POST') {
+          reply(405, { ok: false, error: 'POST required' })
+          return
+        }
+        if (!isLoopbackRequest(req)) {
+          reply(403, { ok: false, error: 'loopback only' })
+          return
+        }
+        try {
+          const body = JSON.parse(await readRequestBody(req))
+          if (body === null || typeof body !== 'object'
+            || typeof body.title !== 'string' || body.title.length > 300
+            || typeof body.html !== 'string' || body.html.length > REPORT_MAX_BYTES) {
+            reply(400, { ok: false, error: 'invalid report' })
+            return
+          }
+          await openNativeReport(body.title, body.html, Number(body.width), Number(body.height))
+          reply(200, { ok: true })
+        } catch (error) {
+          reply(500, { ok: false, error: error instanceof Error ? error.message : 'failed to open report' })
+        }
+      },
+    }), 'usage-balance: native report window route')
+
+    ctx.effect(() => webServer.register({
+      kind: 'exact',
+      path: ARCHIVE_ROUTE,
+      handler: async (req, res) => {
+        const reply = (status, payload) => {
+          res.writeHead(status, {
+            'content-type': 'application/json; charset=utf-8',
+            'cache-control': 'no-store',
+          })
+          res.end(JSON.stringify(payload))
+        }
+        if (!isLoopbackRequest(req)) {
+          reply(403, { ok: false, error: 'loopback only' })
+          return
+        }
+        try {
+          if (req.method === 'GET' || req.method === 'HEAD') {
+            const sessions = await readHostArchive()
+            reply(200, { ok: true, sessions })
+            return
+          }
+          if (req.method !== 'POST') {
+            reply(405, { ok: false, error: 'GET or POST required' })
+            return
+          }
+          const body = JSON.parse(await readRequestBody(req, ARCHIVE_MAX_BYTES))
+          if (body === null || typeof body !== 'object' || body.sessions === null || typeof body.sessions !== 'object') {
+            reply(400, { ok: false, error: 'invalid archive' })
+            return
+          }
+          await mergeHostArchive(body.sessions)
+          reply(200, { ok: true })
+        } catch (error) {
+          reply(500, { ok: false, error: error instanceof Error ? error.message : 'archive failed' })
+        }
+      },
+    }), 'usage-balance: durable archive route')
+  }
 }

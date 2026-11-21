@@ -4,109 +4,114 @@
 >
 > This plugin adds no token charges. It reads local Session projections and the account balance only; it makes no model requests and appends no chat messages.
 
+![Usage balance card](https://github.com/user-attachments/assets/8ee55beb-0794-4ed3-9055-7f7c89671a79)
+
 ## 安装 / Install
 
+从 GitHub 安装当前版本：
+
 ```powershell
-# 直接从 GitHub 安装
-dsh plugin --profile desktop add github:H-ATK/dsh-usage
+dsh plugin --profile desktop add github:H-ATK/dsh-usage#v1.15.5
 ```
+
+安装后重启 DSH，打开 **插件 → 已安装 → 用量余额卡片**。
 
 也可以下载仓库 ZIP，解压后在 **插件 → 添加插件** 中选择包含 `package.json` 的文件夹。
 
-安装后重启 DSH，打开 **插件 → 已安装 → 用量余额卡片**。插件提供两个可独立开关的功能：
+> npm 包名为 `dsh-usage-balance-card`，以 npm 上可安装的最新版本为准。
 
-- **余额卡片**：对话输入框左侧的余额与本轮消费卡片。
-- **使用量轨迹**：会话顶部“轨迹”右侧的按轮次用量账本。
+## 最新版本 1.15.5 / What's new
 
-> npm 包名为 `dsh-usage-balance-card`。
-
-## 最新版本 1.9.0 / What's new
-
-- **余额卡片**：显示 DeepSeek 账户余额、上一轮消费、本轮消费和当前峰谷价格；本轮进行中显示进行中状态，结束后显示金额。
-- **使用量轨迹**：新增工作区/当前窗口的“付费模型”总览，以及按 provider/model 拆分的本地模型和其他付费 API 统计。
-- **本地模型**：单独统计 Token 与轮次，不计入付费总览、不扣 DeepSeek 余额，轮次明细保留本地用量。
-- **第三方付费 API**：Token 计入工作区/当前窗口总览，同时单独列出各厂商/模型的使用量和参考费用；无峰谷的厂商显示黄色“统一价”。
-- **价格与单位**：模型拆分和官方价格表字号放大；中文用户使用“万/亿”和“每 百万 Token”，不再显示纯数字加 Token。
-- **自动汇总**：首次启用、重新开启任一功能或插件重载时，自动汇总所有会话的完整轮次。
-
-## 版本历史 / Version history
-
-- **1.9.0**：当前版本，包含本地/第三方模型拆分、参考价规则、付费模型总览和界面优化。
-- **1.0.0**：首个公开版本，提供余额卡片、使用量轨迹、峰谷价格与轮次统计。
-
----
+- **Host 持久归档**：历史不再只依赖浏览器缓存；删除会话后，已经收集过的用量仍保留在本地 Host 归档中。
+- **用量总览**：按时间范围、工作区、模型筛选；总览、工作区、模型和逐轮账本在同一页查看。
+- **本地 / 第三方 / 官方分账**：本地模型不计费；第三方 API 单独统计；DeepSeek 官方按 CNY 计费。
+- **逐轮价格锁定**：价格表更新后，历史轮次仍按当时的报价计算。
+- **模型详情**：每个模型显示厂家图标、实际模型名、Token 构成和费用。
+- **导出**：CSV 表头跟随界面语言；Excel 导出带列宽、冻结表头、行高和易读单位。
+- **价格表**：DeepSeek 官方 CNY / 百万 Token 价格，加上第三方模型参考价。
+- **界面**：窗口尺寸和明暗配色跟随 Windows；详情和价格表支持独立窗口查看与缩放。
 
 ## 中文
 
 ### 功能
 
-**1. 对话框左侧的余额卡片**
+#### 1. 余额卡片
 
-- 位于对话窗口内、输入框左侧；卡片高度与输入框一致，并跟随输入框变化。
-- 余额单独一行；上一轮消费在左、本轮消费靠右。
-- 本轮进行中显示进行中状态，结束后显示金额；被中断的轮次显示红色中断状态。
-- 余额下方实时显示当前时段：高峰为红色、空闲为蓝绿色，右侧显示输入/输出价格，金额后带 Token 单位。
-- 输入框底部的官方统计行保持显示；卡片不再重复显示轮次、步骤、速度、Token、缓存或上下文。
-- 余额在卡片开启、切换会话、每轮结束以及每 60 秒兜底刷新。
+- 位于对话输入框左侧，高度与输入框一致，跟随输入框变化。
+- 显示 DeepSeek 账户余额、上一轮消费、本轮消费和当前时段价格。
+- 本轮进行中显示状态，结束后显示金额；被中断的轮次显示中断状态。
+- 当前时段显示高峰 / 空闲价格，金额后带每百万 Token 单位。
+- 余额在卡片开启、切换会话、每轮结束以及定时兜底刷新。
 
-**2. 使用量轨迹**
+#### 2. 使用量轨迹
 
-- 位于会话顶部“轨迹”右侧，按轮次记录当前会话的 Token、缓存、费用、耗时和时段。
-- 顶部显示两张统计卡：
-  - **工作区 · 付费模型**：当前工作区所有会话的 DeepSeek 官方 + 第三方付费 API 总量。
-  - **当前窗口 · 付费模型**：当前会话的总轮次、Token、费用和平均缓存命中率。
-- 本地模型不计入“付费模型”总览；第三方付费 API 的 Token 计入总览，同时单独列出自家的用量和费用。
-- 价格表展示 Flash 和 Pro 的官方缓存/输入/输出价格，中文单位为“每 百万 Token”；价格表与轮次表头一起吸顶。
-- 每轮显示：轮次、模型、开始时间、用时、总 Token、估算消费、时段、状态、缓存命中率以及命中/未命中 Token。
+- 位于会话顶部“轨迹”右侧，按轮次记录当前会话。
+- 每轮显示：模型、开始时间、用时、Token、缓存、费用、时段、状态和缓存命中率。
+- 支持本地模型和第三方 API；明细保留每轮实际用量。
 
-**3. 本地模型和其他付费 API**
+#### 3. 用量总览
 
-- `ollama`、`lmstudio`、`llama.cpp`、`vllm`、`local` 等本地 provider，或空 provider 且模型名以 Qwen/Llama/Mistral 等开头时，按本地模型处理。
-- 本地模型：不计入付费总览、不计价、不扣 DeepSeek 余额；轮次明细仍保留实际 Token。
-- 其他非 DeepSeek provider（OpenAI、Anthropic、Google、OpenRouter 等）按第三方付费 API 处理：Token 计入总览，费用在其数据包含 cost 时计入，否则显示 `--`。
-- 模型用量拆分只在存在本地模型或第三方 API 用量时显示；每个模型一行，同时显示当前窗口和工作区。
-- 没有使用本地/第三方模型时，不显示模型拆分和对应统计规则。
+- 全部时间、今日、本月、7 天、30 天和自定义日期。
+- 按工作区、模型筛选。
+- 总览卡：总 Token、DeepSeek 消费、第三方 API 消费、轮次。
+- 工作区卡：每个工作区的 Token、DeepSeek、第三方和轮次。
+- Token 构成：输入、缓存读、缓存写、输出。
+- 模型表：按模型汇总 Token、费用、平均缓存命中率和轮次。
+- 趋势图：按时间查看 Token 与费用变化；点击柱子查看当天详情。
 
-**4. 第三方 API 参考价**
+#### 4. 本地 / 第三方 / 官方
 
-页面会在第三方模型行下显示参考价，单位统一为“每 百万 Token”：
+- `ollama`、`lmstudio`、`llama.cpp`、`vllm`、`local` 等本地 provider 不计费、不扣 DeepSeek 余额。
+- OpenAI、Anthropic、Google、OpenRouter 等非 DeepSeek provider 单独作为第三方 API 统计。
+- DeepSeek 官方消费使用 CNY；第三方参考价使用对应币种，不混入钱包余额。
+- 第三方模型行显示具体模型名和厂家图标，不只显示“第三方 API”。
 
-| 厂商/模型 | 输入 | 缓存读 | 缓存写 | 输出 | 峰谷 |
-|---|---:|---:|---:|---:|---|
-| OpenAI GPT-4o | $2.50 | $1.25 | — | $10.00 | 统一价 |
-| OpenAI GPT-4o mini | $0.15 | $0.075 | — | $0.60 | 统一价 |
-| Anthropic Claude 3.5 Sonnet | $3.00 | $0.30 | $3.75 | $15.00 | 统一价 |
-| Anthropic Claude 3.5 Haiku | $0.80 | $0.08 | $1.00 | $4.00 | 统一价 |
-| Google Gemini 1.5 Pro | $1.25 | $0.31 | — | $5.00 | 统一价 |
-| Google Gemini 1.5 Flash | $0.075 | $0.018 | — | $0.30 | 统一价 |
+#### 5. 价格表
 
-- 上述厂商没有 DeepSeek 式高峰/空闲双价，因此第三方轮次的“时段”显示黄色“统一价”。
-- 参考价仅用于展示和辅助核算，实际以厂商账单为准；币种为 USD，不混入 DeepSeek 钱包余额。
-- 厂商没有统一的实时价格接口，目录带有更新日期；官方改价时需要更新参考目录。
+- DeepSeek 官方价格按 CNY / 百万 Token 单列，包含缓存读、缓存写、输入和输出。
+- 第三方目录包含常用 OpenAI、Anthropic、Google 和 xAI 参考价。
+- 价格表可编辑；保存后只影响之后的新报价，不重写历史。
+- 参考价是辅助核算，最终以厂商账单为准。
+
+#### 6. 导出
+
+- **CSV**：通用逗号分隔表格，中文界面导出中文表头。
+- **Excel**：带预设列宽、冻结表头、行高、统一左对齐和模型版本号；Token 数据后附带“万 / 亿”单位，费用保持原值。
+
+#### 7. 数据与归档
+
+- 用量历史会写入 Host 持久归档：
+
+```text
+~/.dsh/storages/dsh-usage-balance/archive.json
+```
+
+- 浏览器本地归档作为兜底，并在首次加载时迁移到 Host。
+- 已经收集过的会话，即使之后被删除，也会保留在归档中。
+- 归档最多保留约 100,000 轮。
 
 ### 功能开关
 
-打开 **插件 → 已安装 → 用量余额卡片**，页面底部有“功能开关”：
+打开 **插件 → 已安装 → 用量余额卡片**，页面底部有独立开关：
 
-- **余额卡片**：显示/隐藏左侧卡片。
-- **使用量轨迹**：显示/隐藏页签及其后台收集。
+- **余额卡片**
+- **使用量轨迹**
+- **用量总览**
 
-两个开关相互独立，状态保存在 `localStorage`，并同步到 Host Config。首次启用或重新开启任一功能时，会全量汇总所有会话；之后新会话会自动加入统计。
+开关状态会同步到 Host Config。启用任一功能后会汇总所有会话；之后新会话自动加入。
 
-### 数据与隐私
+### 兼容性
 
-- 新增 Host 端 `usageTrack` 会话投影，仅折叠本地会话日志中的 Token 和耗时事件。
-- 浏览器只向 Session Controller 请求投影，不修改会话记录。
-- 卡片读取现有 DeepSeek 账户余额 RPC；余额数值和查询频率与原账户页面一致。
-- 插件不发送会话内容到第三方，也不发起模型请求。
+- 需要 DSH Host `0.2.2-rc.3` 或更高版本。
+- 余额需要登录 DeepSeek 账户；未登录或接口不可用时显示 `--`。
+- 窗口过窄时余额卡片自动隐藏，避免压缩输入框。
+- 费用为估算值，实际以平台账单为准。
 
-### 兼容性与限制
+### 隐私
 
-- 需要登录 DeepSeek 账户才能显示余额；未登录或余额不可用时显示 `--`。
-- 余额卡片在窗口过窄时会自动隐藏，避免压缩输入框。
-- 投影每个会话最多保留最近 500 轮。
-- 费用按 DeepSeek 官方峰谷价估算，实际以平台账单为准；中国法定节假日未单独处理。
-- 第三方 API 的余额和最终账单以对应厂商后台为准，插件无法读取。
+- 只读取本地会话投影、账户余额和插件配置。
+- 不发送会话内容到第三方，不发起模型请求，不修改会话日志。
+- 归档数据只保存在本机 DSH 数据目录。
 
 ---
 
@@ -114,49 +119,26 @@ dsh plugin --profile desktop add github:H-ATK/dsh-usage
 
 ### Features
 
-**Balance card**
+- **Balance card** beside the composer: DeepSeek balance, previous-turn spend, current-turn spend, and the active peak/off-peak price.
+- **Usage trajectory** tab: per-turn model, time, duration, tokens, cache, cost, window, status, and cache hit rate.
+- **Usage overview**: today / month / 7 days / 30 days / all time / custom dates, plus workspace and model filters.
+- **Workspace accounting**: tokens, DeepSeek spend, third-party spend, and turns for every workspace.
+- **Token composition**: input, cache read, cache write, and output.
+- **Model table**: per-model tokens, cost, average cache hit rate, and turns.
+- **Local / third-party separation**: local providers are free and excluded from paid totals; third-party APIs are counted separately with their own currencies.
+- **Price table**: DeepSeek official CNY prices per million tokens plus third-party reference prices. History keeps the quote that was active at the time.
+- **CSV and Excel export**: localized CSV headers; Excel export includes preset widths, a frozen header, row height, left alignment, model versions, and compact Chinese number units for token metrics.
+- **Host archive**: usage is persisted under `~/.dsh/storages/dsh-usage-balance/archive.json`; deleted Sessions that were already collected remain in history.
 
-- Sits left of the composer; height follows the composer.
-- Shows the DeepSeek balance, previous-turn spend, current-turn spend, and the active peak/off-peak price.
-- The native composer statistics row stays visible; the card does not duplicate turns, steps, speed, tokens, cache, or context.
-- Refreshes when the card opens, on Session switch, after each turn, and every 60 seconds as a fallback.
+### Install
 
-**Usage trajectory**
-
-- Registered next to the built-in Trajectory tab and backed by the Host `usageTrack` projection.
-- **Workspace · paid models** totals DeepSeek official + third-party paid API usage; **Current window · paid models** shows the active Session.
-- Local models are excluded from paid totals. Third-party tokens are included and also listed by provider/model; their cost is included only when available, otherwise `--`.
-- Both Flash and Pro official prices are shown with cache/input/output columns and the “per 1M tokens” legend. The price table and turn header stay sticky.
-- Each turn shows model, start time, duration, total tokens, estimated cost, window, status, and cache-hit/cache-miss details.
-
-**Local and third-party models**
-
-- Providers such as `ollama`, `lmstudio`, `llama.cpp`, `vllm`, and `local` are treated as local; they add no paid spend and no wallet charge.
-- Other non-DeepSeek providers are treated as third-party paid APIs. Their tokens count toward paid totals; their cost is used when present.
-- The model usage split appears only when local or third-party usage exists, with current-window and workspace columns.
-
-**Third-party reference prices**
-
-The model rows show a reference price per 1M tokens. The current catalog covers OpenAI GPT-4o/mini, Anthropic Claude 3.5 Sonnet/Haiku, and Google Gemini 1.5 Pro/Flash. These vendors use flat pricing, so third-party turn rows show a yellow “Flat price” and the reference line says “Flat price”. Vendor bills are authoritative.
-
-### Feature switches
-
-Open **Plugins → Installed → Usage balance card** and use the switches at the bottom to show/hide the balance card and the usage trajectory independently. A full Session collection runs when either feature is first enabled or re-enabled.
+```powershell
+dsh plugin --profile desktop add github:H-ATK/dsh-usage#v1.15.5
+```
 
 ### Privacy
 
-- The Host adds only a `usageTrack` Session projection folded from local token/timing events.
-- The browser reads projections; it does not modify Session logs.
-- The card uses the existing DeepSeek balance RPC.
-- The plugin sends no conversation content to third parties and makes no model requests.
-
-### Limitations
-
-- No balance is shown without a logged-in DeepSeek account.
-- The card hides on very narrow windows.
-- The projection keeps up to 500 turns per Session.
-- Costs are estimates based on official prices; the platform bill is authoritative.
-- Third-party balance and final billing are available only from that vendor.
+The plugin reads local Session projections, the account balance, and its own settings. It does not send conversation content to third parties, does not make model requests, and does not modify Session logs. Archive data stays on the local machine.
 
 ## License
 

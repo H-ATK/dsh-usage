@@ -1,6 +1,6 @@
 {
   "name": "dsh-usage-balance-card",
-  "version": "1.9.0",
+  "version": "1.15.5",
   "type": "module",
   "description": "DeepSeek Harness side balance card with local/third-party usage split, dated third-party billing references, and a deduplicated per-turn usage ledger.",
   "license": "MIT",
@@ -25,6 +25,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "engines": {
+    "dsh": ">=0.2.2-rc.3"
+  },
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
@@ -35,6 +38,7 @@
     "index.js",
     "client.js",
     "cordis.patch.yml",
+    "pricing.json",
     "locale/*.json",
     "icon.svg",
     "README.md",
@@ -43,6 +47,7 @@
     "LICENSE"
   ],
   "dsh": {
+    "manifestVersion": 1,
     "bundle": {
       "patch": "./cordis.patch.yml"
     },

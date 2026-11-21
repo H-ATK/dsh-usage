@@ -7,5 +7,6 @@ dist/
 Thumbs.db
 *.tsbuildinfo
 coverage/
+release/
 .vscode/
 .idea/
