@@ -141,6 +141,7 @@ window.__ModuleLoader__.load({
         cacheRead: '缓存命中',
         cacheWrite: '缓存写入',
         models: '模型详情',
+        usageDetail: '用量详情',
         modelsHint: '按模型汇总当前范围 · 含费用和轮次',
         unknownModel: '未知模型',
         model: '模型',
@@ -293,7 +294,7 @@ window.__ModuleLoader__.load({
       },
       config: {
         title: '功能开关',
-        subtitle: '两个功能相互独立，可以单独开启或关闭。',
+        subtitle: '三个功能相互独立，可以单独开启或关闭。',
         balanceCard: '余额卡片',
         balanceCardHint: '在对话框左侧显示余额、上一轮/本轮消费、当前时段价格和会话统计，并隐藏对话框底部的原生统计行。',
         usageTrajectory: '使用量轨迹',
@@ -390,6 +391,7 @@ window.__ModuleLoader__.load({
         cacheRead: 'Cache read',
         cacheWrite: 'Cache write',
         models: 'Model details',
+        usageDetail: 'Usage details',
         modelsHint: 'Totals by model for the current range, including cost and turns',
         unknownModel: 'Unknown model',
         model: 'Model',
@@ -542,7 +544,7 @@ window.__ModuleLoader__.load({
       },
       config: {
         title: 'Feature switches',
-        subtitle: 'The two features are independent; each can be switched separately.',
+        subtitle: 'The three features are independent; each can be switched separately.',
         balanceCard: 'Balance card',
         balanceCardHint: 'Show balance, previous/current-turn spend, current-window price, and Session stats left of the input card, and hide the composer statistics row.',
         usageTrajectory: 'Usage trajectory',
@@ -4110,7 +4112,9 @@ window.__ModuleLoader__.load({
                   const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`
                   chart.push({
                     key,
-                    label: cursor.getMonth() === 0 ? `${cursor.getFullYear()}` : `${cursor.getMonth() + 1}月`,
+                    label: cursor.getMonth() === 0
+                      ? `${cursor.getFullYear()}`
+                      : `${cursor.getMonth() + 1}${zhUser ? '月' : '/'}`,
                     fullLabel: key,
                     official: 0,
                     third: 0,
@@ -4195,21 +4199,36 @@ window.__ModuleLoader__.load({
               : (String(item.title ?? '').trim() || t('workspace.ungrouped')))
           }
 
-          const exportMetric = value => {
+          const exportMetric = (value, chinese = zhUser) => {
             const number = Number(value)
             if (!Number.isFinite(number) || number === 0) return '0'
             const absolute = Math.abs(number)
-            const [divisor, unit] = absolute >= 100_000_000
-              ? [100_000_000, '亿']
-              : absolute >= 10_000
-                ? [10_000, '万']
-                : absolute >= 1_000
-                  ? [1_000, '千']
-                  : [1, '']
-            if (unit === '') return String(Math.round(number))
+            const units = chinese
+              ? [
+                [100_000_000, '亿'],
+                [10_000, '万'],
+                [1_000, '千'],
+              ]
+              : [
+                [1_000_000_000_000, 'T'],
+                [1_000_000_000, 'B'],
+                [1_000_000, 'M'],
+                [1_000, 'K'],
+              ]
+            const match = units.find(([divisor]) => absolute >= divisor)
+            if (match === undefined) return String(Math.round(number))
+            const [divisor, unit] = match
             const scaled = Math.round((number / divisor) * 10_000) / 10_000
             return `${Math.round(number)} (${String(scaled).replace(/\.?0+$/, '')}${unit})`
           }
+
+          const exportCategory = category => category === 'official'
+            ? t('overview.official')
+            : category === 'third'
+              ? t('overview.third')
+              : category === 'local'
+                ? t('overview.local')
+                : String(category ?? '')
 
           const exportCsv = () => {
             const csvCell = value => {
@@ -4222,15 +4241,15 @@ window.__ModuleLoader__.load({
             for (const entry of overview.entries) {
               rows.push([
                 new Date(entry.at).toISOString(),
-                entry.category,
+                exportCategory(entry.category),
                 entry.provider,
                 modelLabel(entry.model, entry.provider),
                 entry.workspaceId === null ? '' : (workspaceNameById.get(entry.workspaceId) ?? ''),
-                exportMetric(entry.tokens),
-                exportMetric(entry.input),
-                exportMetric(entry.cacheRead),
-                exportMetric(entry.cacheWrite),
-                exportMetric(entry.output),
+                exportMetric(entry.tokens, zhUser),
+                exportMetric(entry.input, zhUser),
+                exportMetric(entry.cacheRead, zhUser),
+                exportMetric(entry.cacheWrite, zhUser),
+                exportMetric(entry.output, zhUser),
                 entry.cost === null ? '' : entry.cost.amount,
                 entry.cost === null ? '' : entry.cost.currency,
               ])
@@ -4265,15 +4284,15 @@ window.__ModuleLoader__.load({
             for (const entry of overview.entries) {
               rows.push([
                 new Date(entry.at).toISOString(),
-                entry.category,
+                exportCategory(entry.category),
                 entry.provider,
                 modelLabel(entry.model, entry.provider),
                 entry.workspaceId === null ? '' : (workspaceNameById.get(entry.workspaceId) ?? ''),
-                exportMetric(entry.tokens),
-                exportMetric(entry.input),
-                exportMetric(entry.cacheRead),
-                exportMetric(entry.cacheWrite),
-                exportMetric(entry.output),
+                exportMetric(entry.tokens, zhUser),
+                exportMetric(entry.input, zhUser),
+                exportMetric(entry.cacheRead, zhUser),
+                exportMetric(entry.cacheWrite, zhUser),
+                exportMetric(entry.output, zhUser),
                 entry.cost === null ? '' : entry.cost.amount,
                 entry.cost === null ? '' : entry.cost.currency,
               ])
@@ -4294,7 +4313,7 @@ window.__ModuleLoader__.load({
     <Style ss:ID="header"><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Font ss:FontName="Microsoft YaHei" ss:Size="12" ss:Bold="1"/><Interior ss:Color="#E8EAED" ss:Pattern="Solid"/></Style>
     <Style ss:ID="cell"><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Font ss:FontName="Microsoft YaHei" ss:Size="12"/></Style>
   </Styles>
-  <Worksheet ss:Name="Usage"><Table>
+  <Worksheet ss:Name="${zhUser ? '使用量' : 'Usage'}"><Table>
 ${widths.map(width => `    <Column ss:Width="${width}"/>`).join('\n')}
 ${rows.map((row, rowIndex) => `    <Row ss:Height="${rowIndex === 0 ? 30 : 28}">${row.map(value => cell(value, rowIndex)).join('')}</Row>`).join('\n')}
   </Table>
@@ -4432,9 +4451,9 @@ ${rows.map((row, rowIndex) => `    <Row ss:Height="${rowIndex === 0 ? 30 : 28}">
             const chips = models.map(model => `<span class="chip">${iconMarkup(model.provider, model.model)}${escapeHtml(modelLabel(model.model, model.provider))}<em>${escapeHtml(formatTokenCount(model.tokens, zhUser))}</em></span>`).join('')
             const body = `<div class="hero"><div><h1>${escapeHtml(bucket.fullLabel)}</h1><div class="sub">${escapeHtml(t('overview.totalTokens'))}</div></div><div style="text-align:right"><strong style="font-size:22px">${escapeHtml(formatTokenCount(total, zhUser))}</strong><div class="sub">${escapeHtml(formatMoney(bucket.cny, 'CNY'))} / ${escapeHtml(formatMoney(bucket.usd, 'USD'))}</div></div></div>
               <div class="ring-layout"><div class="ring"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="78" fill="none" stroke="var(--line2)" stroke-width="22"/>${arcs}</svg><div class="ring-center"><strong>${escapeHtml(formatTokenCount(total, zhUser))}</strong><small>Token</small></div></div><div class="legend">${legend}</div></div>
-              ${chips === '' ? '' : `<h2>模型</h2><div class="chips">${chips}</div>`}
+              ${chips === '' ? '' : `<h2>${escapeHtml(t('overview.models'))}</h2><div class="chips">${chips}</div>`}
               <div class="actions"><span class="muted">${escapeHtml(t('overview.footnote'))}</span></div>`
-            void openHtmlWindow(`用量详情 · ${bucket.fullLabel}`, body, 760, 520).then(ok => {
+            void openHtmlWindow(`${t('overview.usageDetail')} · ${bucket.fullLabel}`, body, 760, 520).then(ok => {
               if (!ok) setSelectedIndex(index)
             })
           }
@@ -4458,18 +4477,25 @@ ${rows.map((row, rowIndex) => `    <Row ss:Height="${rowIndex === 0 ? 30 : 28}">
             })
           }
 
+          const dateText = date => zhUser
+            ? `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+            : date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
           const periodLabel = range === 'today'
-            ? `${new Date(clock).getFullYear()}年${new Date(clock).getMonth() + 1}月${new Date(clock).getDate()}日`
+            ? dateText(new Date(clock))
             : range === 'month'
-              ? `${new Date(clock).getFullYear()}年${new Date(clock).getMonth() + 1}月1日 – ${new Date(clock).getMonth() + 1}月${new Date(clock).getDate()}日`
+              ? (() => {
+                const date = new Date(clock)
+                const start = new Date(date.getFullYear(), date.getMonth(), 1)
+                return `${dateText(start)} – ${dateText(new Date(date.getFullYear(), date.getMonth() + 1, 0))}`
+              })()
               : range === 'custom'
                 ? `${customStart || '—'} – ${customEnd || '—'}`
                 : range === '7d' || range === '30d' || range === '90d'
                   ? (() => {
                     const days = range === '7d' ? 6 : range === '30d' ? 29 : 89
-                    const start = new Date(new Date(clock).getFullYear(), new Date(clock).getMonth(), new Date(clock).getDate() - days)
-                    const end = new Date(clock)
-                    return `${start.getFullYear()}年${start.getMonth() + 1}月${start.getDate()}日 – ${end.getFullYear()}年${end.getMonth() + 1}月${end.getDate()}日`
+                    const date = new Date(clock)
+                    const start = new Date(date.getFullYear(), date.getMonth(), date.getDate() - days)
+                    return `${dateText(start)} – ${dateText(date)}`
                   })()
                   : overview.chart.length > 0
                     ? `${overview.chart[0].fullLabel} – ${overview.chart[overview.chart.length - 1].fullLabel}`

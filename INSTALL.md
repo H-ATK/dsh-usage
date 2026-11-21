@@ -24,14 +24,15 @@ dsh plugin --profile desktop add dsh-usage-balance-card
 2. 打开 DSH 的 **插件 → 添加插件**，选择包含 `package.json` 的目录。
 3. 重启 DSH（如果提示需要重启）。
 4. 打开 **插件 → 已安装 → 使用量统计**。
-5. 首次启用时两个开关默认全部开启：
+5. 首次启用时三个开关默认全部开启：
    - 余额卡片
    - 使用量轨迹
-6. 打开任意对话窗口即可看到余额卡片和使用量轨迹页签。
+   - 用量总览
+6. 打开任意对话窗口即可看到余额卡片、使用量轨迹和用量总览页签。
 
 ### 功能开关
 
-- 首次启用：两个开关全部开启。
+- 首次启用：三个开关全部开启。
 - 之后每次切换立即写入 `localStorage`；DSH 关闭再启动会恢复记录的状态。
 - 余额卡片开：输入框左侧显示余额、上一轮/本轮消费、当前时段状态与价格；输入框底部的官方统计行始终显示。
 - 余额卡片关：布局恢复，官方统计行保持显示。
@@ -73,14 +74,15 @@ dsh plugin --profile desktop add dsh-usage-balance-card
 2. Open **Plugins → Add plugin** and choose the folder containing `package.json`.
 3. Restart DSH if prompted.
 4. Open **Plugins → Installed → Usage statistics**.
-5. On first enable both switches default to on:
+5. On first enable all three switches default to on:
    - Balance card
    - Usage trajectory
-6. Open any conversation to see the balance card and Usage trajectory tab.
+   - Usage overview
+6. Open any conversation to see the balance card, Usage trajectory tab, and Usage overview tab.
 
 ### Feature switches
 
-- First enable: both switches on.
+- First enable: all three switches on.
 - Every later change is written to `localStorage`; a DSH restart restores the recorded state.
 - Balance card on: balance, previous/current-turn spend, and current window state/price sit left of the composer; the official composer statistics row always stays visible.
 - Balance card off: the composer layout returns; the official statistics row stays visible.

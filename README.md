@@ -3,6 +3,10 @@
 > 本插件不会额外消耗 Token。它只读取本地会话投影和账户余额，不调用模型、不追加对话消息。
 >
 > This plugin adds no token charges. It reads local Session projections and the account balance only; it makes no model requests and appends no chat messages.
+>
+> 支持中英文界面，跟随 DSH 的语言设置自动切换。
+>
+> Chinese and English UI are included and follow the DSH language setting automatically.
 
 ![使用量统计 · 用量总览](docs/usage-overview.png)
 
