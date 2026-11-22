@@ -17,7 +17,7 @@
 从 GitHub 安装当前版本：
 
 ```powershell
-dsh plugin --profile desktop add github:H-ATK/dsh-usage#v1.15.7
+dsh plugin --profile desktop add github:H-ATK/dsh-usage#v1.15.8
 ```
 
 安装后重启 DSH，打开 **插件 → 已安装 → 使用量统计**。
@@ -26,7 +26,7 @@ dsh plugin --profile desktop add github:H-ATK/dsh-usage#v1.15.7
 
 > npm 包名为 `dsh-usage-balance-card`，以 npm 上可安装的最新版本为准。
 
-## 最新版本 1.15.7 / What's new
+## 最新版本 1.15.8 / What's new
 
 - **Host 持久归档**：历史不再只依赖浏览器缓存；删除会话后，已经收集过的用量仍保留在本地 Host 归档中。
 - **用量总览**：按时间范围、工作区、模型筛选；总览、工作区、模型和逐轮账本在同一页查看。
@@ -139,7 +139,7 @@ dsh plugin --profile desktop add github:H-ATK/dsh-usage#v1.15.7
 ### Install
 
 ```powershell
-dsh plugin --profile desktop add github:H-ATK/dsh-usage#v1.15.7
+dsh plugin --profile desktop add github:H-ATK/dsh-usage#v1.15.8
 ```
 
 ### Privacy

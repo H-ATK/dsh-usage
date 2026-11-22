@@ -475,7 +475,7 @@ async function mergeHostArchive(incoming) {
 }
 
 /** The projection registry and the same-origin pricing route. */
-export const inject = ['sessionProjections', 'webServer']
+export const inject = ['sessionProjections', 'webServer', 'connection']
 
 /**
  * @param {import('@deepseek-ai/cordis').Context} ctx
@@ -483,11 +483,22 @@ export const inject = ['sessionProjections', 'webServer']
 export async function apply(ctx) {
   await ctx.sessionProjections.register(usageTrackProjection)
   const webServer = ctx.get('webServer')
+  const connection = ctx.get('connection')
   if (webServer !== undefined) {
     ctx.effect(() => webServer.register({
       kind: 'exact',
       path: PRICING_ROUTE,
-      resource: async () => {
+      resource: async request => {
+        const rejection = connection === undefined ? 503 : connection.requestRejection(request)
+        if (rejection !== undefined) {
+          return new Response(JSON.stringify({ ok: false, error: 'unauthorized' }), {
+            status: rejection,
+            headers: {
+              'content-type': 'application/json; charset=utf-8',
+              'cache-control': 'no-store',
+            },
+          })
+        }
         const payload = await currentPricing()
         return new Response(JSON.stringify(payload), {
           headers: {
@@ -509,12 +520,17 @@ export async function apply(ctx) {
           })
           res.end(JSON.stringify(payload))
         }
-        if (req.method !== 'POST') {
-          reply(405, { ok: false, error: 'POST required' })
+        const rejection = connection === undefined ? 503 : connection.requestRejection(req)
+        if (rejection !== undefined) {
+          reply(rejection, { ok: false, error: 'unauthorized' })
           return
         }
         if (!isLoopbackRequest(req)) {
           reply(403, { ok: false, error: 'loopback only' })
+          return
+        }
+        if (req.method !== 'POST') {
+          reply(405, { ok: false, error: 'POST required' })
           return
         }
         try {
@@ -543,6 +559,11 @@ export async function apply(ctx) {
             'cache-control': 'no-store',
           })
           res.end(JSON.stringify(payload))
+        }
+        const rejection = connection === undefined ? 503 : connection.requestRejection(req)
+        if (rejection !== undefined) {
+          reply(rejection, { ok: false, error: 'unauthorized' })
+          return
         }
         if (!isLoopbackRequest(req)) {
           reply(403, { ok: false, error: 'loopback only' })

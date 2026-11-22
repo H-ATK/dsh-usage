@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.15.8
+
+- Protect plugin HTTP routes with `ctx.connection.requestRejection` (Host/Origin and browser authentication).
+
 ## 1.15.7
 
 - Refresh the published package at a new patch version; no functional changes.
